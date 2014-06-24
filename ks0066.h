@@ -16,6 +16,12 @@
 #define KS0066_RW					(1<<PD6)
 #define KS0066_RS					(1<<PD5)
 
+/* Backlight port */
+#define KS0066_BCKL_PORT			PORTD
+#define KS0066_BCKL_DDR				DDRD
+
+#define KS0066_BCKL					(1<<PD4)
+
 #define KS0066_INIT_DATA			0x30
 
 #define KS0066_CLEAR				0x01
