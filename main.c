@@ -1,7 +1,12 @@
 #include "ks0066.h"
+#include "ds18x20.h"
+
 #include <util/delay.h>
 
+#define DISPLAY_TIME_TEMP		1000
+
 static uint8_t strBuf[] = "                ";			/* String buffer */
+static ds18x20Dev devs[DS18X20_MAX_DEV];
 
 void adcInit(void)
 {
@@ -61,6 +66,21 @@ uint8_t *mkNumString(int16_t number, uint8_t width, uint8_t frac)
 	return strBuf;
 }
 
+void showTemp(uint8_t sensor, uint8_t time)
+{
+	uint8_t i;
+
+	for (i = 0; i < time; i++) {
+		if (ds18x20IsOnBus()) {
+			ds18x20GetTemp(&devs[sensor]);
+			ks0066SetXY(sensor % 2 * 8, 1);
+			ks0066WriteString(mkNumString(devs[sensor].temp, 5, 1));
+		}
+	}
+
+	return;
+}
+
 int main(void)
 {
 	ks0066Init();
@@ -69,22 +89,37 @@ int main(void)
 	uint8_t max = 48;
 	uint8_t i;
 
+	adcMux(6);
+
+	uint8_t count = 0;
+
 	while(1) {
 
-		for (i = 0; i <= max; i++) {
-			adcMux(6);
+		if (ds18x20IsOnBus()) {
+			count = ds18x20SearchAllRoms(devs, DS18X20_MAX_DEV);
+			if (ds18x20IsOnBus()) {
+				convertTemp(); /* It should be delay > 750ms after this */
+				_delay_ms(DISPLAY_TIME_TEMP);
+			}
+			ks0066Clear();
 			ks0066SetXY(0, 0);
-			ks0066WriteString(mkNumString(adcVolt(), 4, 1));
-			ks0066WriteData('V');
-			adcMux(7);
-			ks0066SetXY(7, 0);
-			ks0066WriteString(mkNumString(adcVolt(), 4, 1));
-			ks0066WriteData('V');
+			ks0066WriteString(mkNumString(count, 1, 0));
+			ks0066WriteString((uint8_t*)" sensors found.");
+			for (i = 0; i < count; i++) {
+				showTemp(i, 2);
+			}
+		} else {
+			ks0066Clear();
+			for (i = 0; i <= max; i++) {
+				ks0066SetXY(0, 0);
+				ks0066WriteString(mkNumString(adcVolt(), 4, 1));
+				ks0066WriteData('V');
 
-			ks0066SetXY(13, 0);
-			ks0066WriteString(mkNumString(i, 3, 0));
-			ks0066ShowBar(i, max);
-			_delay_ms(100);
+				ks0066SetXY(13, 0);
+				ks0066WriteString(mkNumString(i, 3, 0));
+				ks0066ShowBar(i, max);
+				_delay_ms(100);
+			}
 		}
 	}
 

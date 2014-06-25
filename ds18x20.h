@@ -1,0 +1,49 @@
+#ifndef DS18B20_H
+#define DS18B20_H
+
+#include <avr/io.h>
+
+#define DS18X20_PORT				PORTC
+#define DS18X20_DDR					DDRC
+#define DS18X20_PIN					PINC
+
+#define DS18X20_WIRE				(1<<PC0)
+
+#define DS18X20_PARASITE_POWER
+
+/* DS18X20 commands */
+#define DS18X20_CMD_SEARCH_ROM		0xF0
+#define DS18X20_CMD_READ_ROM		0x33
+#define DS18X20_CMD_MATCH_ROM		0x55
+#define DS18X20_CMD_SKIP_ROM		0xCC
+#define DS18X20_CMD_ALARM_SEARCH	0xEC
+#define DS18X20_CMD_CONVERT			0x44
+#define DS18X20_CMD_WRITE_SCRATCH	0x4E
+#define DS18X20_CMD_READ_SCRATCH	0xBE
+#define DS18X20_CMD_COPY_SCRATCH	0x48
+#define DS18X20_CMD_RECALL_EE		0xB8
+#define DS18X20_CMD_READ_POWER		0xB4
+
+#define DS18S20_FAMILY_CODE			0x10
+#define DS18B20_FAMILY_CODE			0x28
+
+#define DS18X20_MAX_DEV				5
+
+typedef struct {
+	uint8_t id[8];		/* 64 bit ds18x20 device ID. */
+	int16_t tempData;	/* Raw temperature value */
+	int16_t temp;		/* Decimal temperature value x 10 */
+} ds18x20Dev;
+
+uint8_t ds18x20IsOnBus(void);
+
+void ds18x20SendByte(uint8_t byte);
+uint8_t ds18x20GetByte(void);
+
+uint8_t ds18x20SearchAllRoms(ds18x20Dev *devs, uint8_t maxNum);
+
+void convertTemp(void);
+
+void ds18x20GetTemp(ds18x20Dev *dev);
+
+#endif /* DS18B20_H */

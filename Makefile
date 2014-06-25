@@ -1,6 +1,6 @@
 TARG=ks0066lib
 
-SRCS = main.c ks0066.c
+SRCS = main.c ks0066.c ds18x20.c
 MCU = atmega8
 F_CPU = 16000000L
 
