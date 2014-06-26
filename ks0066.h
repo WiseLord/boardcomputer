@@ -74,7 +74,9 @@ void ks0066SetXY(uint8_t x, uint8_t y);
 void ks0066WriteString(uint8_t *string);
 
 void ks0066ShowBar(uint16_t value, uint16_t max);
+
 void ks0066ShowBigNum(uint16_t val, uint8_t pos);
-void ks0066ShowColon(uint8_t pos);
+void ks0066ShowBigDot(uint8_t x, uint8_t y);
+void ks0066ShowBigColon(uint8_t x);
 
 #endif /* KS0066_H */

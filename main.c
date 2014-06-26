@@ -96,7 +96,7 @@ int main(void)
 	while(1) {
 
 		ks0066Clear();
-		ks0066ShowColon(7);
+		ks0066ShowBigColon(7);
 		for (i = 0; i < 10; i++) {
 			ks0066ShowBigNum(i, j * 9 / 2);
 			_delay_ms(1000);
