@@ -142,11 +142,11 @@ void ks0066Init(void)
 
 	ks0066WriteCommand(swap(KS0066_FUNCTION | KS0066_4BIT));
 	ks0066WriteCommand(KS0066_FUNCTION | KS0066_4BIT | KS0066_2LINES);
+	ks0066WriteCommand(KS0066_SET_MODE | KS0066_INC_ADDR);
 
-	ks0066WriteCommand(KS0066_DISPLAY | KS0066_DISPAY_ON);
 	ks0066WriteCommand(KS0066_CLEAR);
 	_delay_ms(2);
-	ks0066WriteCommand(KS0066_SET_MODE | KS0066_INC_ADDR);
+	ks0066WriteCommand(KS0066_DISPLAY | KS0066_DISPAY_ON);
 
 	return;
 }

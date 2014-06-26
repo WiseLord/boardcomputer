@@ -89,20 +89,19 @@ int main(void)
 	uint8_t max = 48;
 	uint8_t i, j = 0;
 
-	ks0066ShowColon(7);
-	while(1) {
-		for (i = 0; i < 10; i++) {
-			ks0066ShowBigNum(i, j * 9 / 2);
-			_delay_ms(1000);
-			j = (j + 1) % 4;
-		}
-	}
-
 	adcMux(6);
 
 	uint8_t count = 0;
 
 	while(1) {
+
+		ks0066Clear();
+		ks0066ShowColon(7);
+		for (i = 0; i < 10; i++) {
+			ks0066ShowBigNum(i, j * 9 / 2);
+			_delay_ms(1000);
+			j = (j + 1) % 4;
+		}
 
 		if (ds18x20IsOnBus()) {
 			count = ds18x20SearchAllRoms(devs, DS18X20_MAX_DEV);
@@ -117,6 +116,7 @@ int main(void)
 			for (i = 0; i < count; i++) {
 				showTemp(i, 2);
 			}
+			_delay_ms(3000);
 		} else {
 			ks0066Clear();
 			for (i = 0; i <= max; i++) {

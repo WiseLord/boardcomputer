@@ -1,15 +1,16 @@
 TARG=ks0066lib
 
 SRCS = main.c ks0066.c ds18x20.c
+
 MCU = atmega8
 F_CPU = 16000000L
 
 CS = -fexec-charset=ks0066-ru
 
-OPTIMIZE = -Os -mcall-prologues
-CFLAGS = -g -Wall -Werror -lm $(OPTIMIZE) $(CS) -mmcu=$(MCU) -DF_CPU=$(F_CPU)
-LDFLAGS = -g -Wall -Werror -mmcu=$(MCU)
-OBJS = $(SRCS:.c=.o)
+OPTIMIZE = -Os -mcall-prologues -fshort-enums
+DEBUG = -g -Wall -Werror
+CFLAGS =  $(DEBUG) -lm $(OPTIMIZE) $(CS) -mmcu=$(MCU) -DF_CPU=$(F_CPU)
+LDFLAGS =  $(DEBUG) -mmcu=$(MCU)
 
 CC = avr-gcc
 OBJCOPY = avr-objcopy
@@ -20,6 +21,8 @@ AD_MCU = -p atmega8
 #AD_PORT = -P avrdoper
 
 AD_CMDLINE = $(AD_MCU) $(AD_PROG) $(AD_PORT)
+
+OBJS = $(SRCS:.c=.o)
 
 all: $(TARG)
 
