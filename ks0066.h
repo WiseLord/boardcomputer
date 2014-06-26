@@ -61,7 +61,8 @@
 enum {
 	LCD_USER_SYMBOLS_EMPTY,
 	LCD_USER_SYMBOLS_BAR,
-	LCD_USER_SYMBOLS_BIGNUM
+	LCD_USER_SYMBOLS_BIGNUM,
+	LCD_USER_SYMBOLS_TEMP
 };
 
 void ks0066WriteCommand(uint8_t command);
@@ -78,5 +79,7 @@ void ks0066ShowBar(uint16_t value, uint16_t max);
 void ks0066ShowBigNum(uint16_t val, uint8_t pos);
 void ks0066ShowBigDot(uint8_t x, uint8_t y);
 void ks0066ShowBigColon(uint8_t x);
+
+void ks0066GenTempSymbols(void);
 
 #endif /* KS0066_H */

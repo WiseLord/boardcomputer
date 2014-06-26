@@ -1,8 +1,13 @@
 #include "ds18x20.h"
 
+#include "mtimer.h"
+
 #include <util/delay.h>
 
-uint8_t ds18x20IsOnBus(void)
+static ds18x20Dev devs[DS18X20_MAX_DEV];
+static uint8_t devCount = 0;
+
+static uint8_t ds18x20IsOnBus(void)
 {
 	uint8_t ret;
 
@@ -51,7 +56,7 @@ static uint8_t ds18x20GetBit(void)
 	return ret;
 }
 
-void ds18x20SendByte(uint8_t byte)
+static void ds18x20SendByte(uint8_t byte)
 {
 	uint8_t i;
 
@@ -61,7 +66,7 @@ void ds18x20SendByte(uint8_t byte)
 	return;
 }
 
-uint8_t ds18x20GetByte(void)
+static uint8_t ds18x20GetByte(void)
 {
 	uint8_t i, ret = 0;
 
@@ -72,6 +77,47 @@ uint8_t ds18x20GetByte(void)
 			ret &= ~(1<<i);
 
 	return ret;
+}
+
+static void ds18x20Select(ds18x20Dev *dev)
+{
+	uint8_t i;
+
+	ds18x20SendByte(DS18X20_CMD_MATCH_ROM);
+
+	for (i = 0; i < 8; i++)
+		ds18x20SendByte(dev->id[i]);
+
+	return;
+}
+
+static void getAllTemps()
+{
+	uint8_t i;
+
+	for (i = 0; i < devCount; i++) {
+		if (ds18x20IsOnBus()) {
+			ds18x20Select(&devs[i]);
+			ds18x20SendByte(DS18X20_CMD_READ_SCRATCH);	// Get temperature from device
+			devs[i].tempData = ds18x20GetByte() | (ds18x20GetByte() << 8);
+		}
+	}
+
+	return;
+}
+
+static void convertTemp(void)
+{
+	ds18x20SendByte(DS18X20_CMD_SKIP_ROM);
+	ds18x20SendByte(DS18X20_CMD_CONVERT);
+
+#ifdef DS18X20_PARASITE_POWER
+	/* Set active 1 on port for 750ms as parasitic power */
+	DS18X20_PORT |= DS18X20_WIRE;
+	DS18X20_DDR |= DS18X20_WIRE;
+#endif
+
+	return;
 }
 
 static uint8_t ds18x20SearchRom(uint8_t *bitPattern, uint8_t lastDeviation)
@@ -125,7 +171,7 @@ static uint8_t ds18x20SearchRom(uint8_t *bitPattern, uint8_t lastDeviation)
 	return newDeviation;
 }
 
-uint8_t ds18x20SearchAllRoms(ds18x20Dev *devs, uint8_t maxNum)
+uint8_t ds18x20Process(void)
 {
 	uint8_t i, j;
 	uint8_t * newID;
@@ -133,69 +179,54 @@ uint8_t ds18x20SearchAllRoms(ds18x20Dev *devs, uint8_t maxNum)
 	uint8_t lastDeviation;
 	uint8_t count = 0;
 
-	// Reset addresses
-	for (i = 0; i < maxNum; i++)
-		for (j = 0; j < 8; j++)
-			devs[i].id[j] = 0x00;
+	if (getTempTimer() == 0) {
 
-	newID = devs[0].id;
-	lastDeviation = 0;
-	currentID = newID;
+		getAllTemps();
 
-	do {
-		for (j = 0; j < 8; j++)
-			newID[j] = currentID[j];
+		/* Reset addresses */
+		for (i = 0; i < DS18X20_MAX_DEV; i++)
+			for (j = 0; j < 8; j++)
+				devs[i].id[j] = 0x00;
 
-		if (!ds18x20IsOnBus())
-			return 0;
-
-		lastDeviation = ds18x20SearchRom(newID, lastDeviation);
-
+		/* Search all sensors */
+		newID = devs[0].id;
+		lastDeviation = 0;
 		currentID = newID;
-		count++;
-		newID=devs[count].id;
 
-	} while (lastDeviation != 0);
+		do {
+			for (j = 0; j < 8; j++)
+				newID[j] = currentID[j];
 
-	return count;
+			if (!ds18x20IsOnBus()) {
+				devCount = 0;
+
+				return devCount;
+			}
+
+			lastDeviation = ds18x20SearchRom(newID, lastDeviation);
+
+			currentID = newID;
+			count++;
+			newID=devs[count].id;
+
+		} while (lastDeviation != 0);
+
+		devCount = count;
+
+		/* Convert temperature */
+		if (ds18x20IsOnBus()) {
+			convertTemp();
+			setTempTimer(750);
+		}
+	}
+
+	return devCount;
 }
 
-static void ds18x20Select(ds18x20Dev *dev)
+int16_t ds18x20GetTemp(uint8_t num)
 {
-	uint8_t i;
+	if (devs[num].id[0] == 0x28)
+		return devs[num].tempData * 5 / 8;
 
-	ds18x20SendByte(DS18X20_CMD_MATCH_ROM);
-
-	for (i = 0; i < 8; i++)
-		ds18x20SendByte(dev->id[i]);
-
-	return;
-}
-
-void convertTemp(void)
-{
-	ds18x20SendByte(DS18X20_CMD_SKIP_ROM);
-	ds18x20SendByte(DS18X20_CMD_CONVERT);
-
-#ifdef DS18X20_PARASITE_POWER
-	/* Set active 1 on port for 750ms as parasitic power */
-	DS18X20_PORT |= DS18X20_WIRE;
-	DS18X20_DDR |= DS18X20_WIRE;
-#endif
-
-	return;
-}
-
-void ds18x20GetTemp(ds18x20Dev *dev)
-{
-	ds18x20Select(dev);
-	ds18x20SendByte(DS18X20_CMD_READ_SCRATCH);	// Get temperature from device
-
-	dev->tempData = ds18x20GetByte() | (ds18x20GetByte() << 8);
-
-	dev->temp = dev->tempData * 2;
-	if (dev->id[0] == 0x28)
-		dev->temp = dev->tempData * 5 / 8;
-
-	return;
+	return devs[num].tempData * 2;
 }

@@ -1,12 +1,10 @@
 #include "ks0066.h"
 #include "ds18x20.h"
+#include "mtimer.h"
 
 #include <util/delay.h>
-
-#define DISPLAY_TIME_TEMP		1000
-
-static uint8_t strBuf[] = "                ";			/* String buffer */
-static ds18x20Dev devs[DS18X20_MAX_DEV];
+#include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 
 void adcInit(void)
 {
@@ -37,6 +35,8 @@ uint8_t adcVolt(void)
 
 uint8_t *mkNumString(int16_t number, uint8_t width, uint8_t frac)
 {
+	static uint8_t strBuf[6];
+
 	uint8_t sign = ' ';
 	int8_t pos;
 
@@ -66,17 +66,20 @@ uint8_t *mkNumString(int16_t number, uint8_t width, uint8_t frac)
 	return strBuf;
 }
 
-void showTemp(uint8_t sensor, uint8_t time)
+void showTempAll(uint8_t count)
 {
-	uint8_t i;
+	ks0066GenTempSymbols();
 
-	for (i = 0; i < time; i++) {
-		if (ds18x20IsOnBus()) {
-			ds18x20GetTemp(&devs[sensor]);
-			ks0066SetXY(sensor % 2 * 8, 1);
-			ks0066WriteString(mkNumString(devs[sensor].temp, 5, 1));
-		}
-	}
+	ks0066SetXY(0, 0);
+	ks0066WriteString((uint8_t*)" \x08\x01\x02\x03""a    Ca\x01o\x04 ");
+
+	ks0066SetXY(0, 1);
+	ks0066WriteString(mkNumString(ds18x20GetTemp(0), 5, 1));
+	ks0066WriteString((uint8_t*)"\x05""C  ");
+
+	ks0066SetXY(9, 1);
+	ks0066WriteString(mkNumString(ds18x20GetTemp(1), 5, 1));
+	ks0066WriteString((uint8_t*)"\x05""C  ");
 
 	return;
 }
@@ -85,38 +88,20 @@ int main(void)
 {
 	ks0066Init();
 	adcInit();
+	mTimerInit();
+	sei();
 
 	uint8_t max = 48;
-	uint8_t i, j = 0;
+	uint8_t i;
 
 	adcMux(6);
 
 	uint8_t count = 0;
 
 	while(1) {
-
-		ks0066Clear();
-		ks0066ShowBigColon(7);
-		for (i = 0; i < 10; i++) {
-			ks0066ShowBigNum(i, j * 9 / 2);
-			_delay_ms(1000);
-			j = (j + 1) % 4;
-		}
-
-		if (ds18x20IsOnBus()) {
-			count = ds18x20SearchAllRoms(devs, DS18X20_MAX_DEV);
-			if (ds18x20IsOnBus()) {
-				convertTemp(); /* It should be delay > 750ms after this */
-				_delay_ms(DISPLAY_TIME_TEMP);
-			}
-			ks0066Clear();
-			ks0066SetXY(0, 0);
-			ks0066WriteString(mkNumString(count, 1, 0));
-			ks0066WriteString((uint8_t*)" sensors found.");
-			for (i = 0; i < count; i++) {
-				showTemp(i, 2);
-			}
-			_delay_ms(3000);
+		count = ds18x20Process();
+		if (count) {
+			showTempAll(count);
 		} else {
 			ks0066Clear();
 			for (i = 0; i <= max; i++) {

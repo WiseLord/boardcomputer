@@ -1,5 +1,5 @@
-#ifndef DS18B20_H
-#define DS18B20_H
+#ifndef DS18X20_H
+#define DS18X20_H
 
 #include <avr/io.h>
 
@@ -27,23 +27,14 @@
 #define DS18S20_FAMILY_CODE			0x10
 #define DS18B20_FAMILY_CODE			0x28
 
-#define DS18X20_MAX_DEV				5
+#define DS18X20_MAX_DEV				4
 
 typedef struct {
 	uint8_t id[8];		/* 64 bit ds18x20 device ID. */
 	int16_t tempData;	/* Raw temperature value */
-	int16_t temp;		/* Decimal temperature value x 10 */
 } ds18x20Dev;
 
-uint8_t ds18x20IsOnBus(void);
+uint8_t ds18x20Process(void);
+int16_t ds18x20GetTemp(uint8_t num);
 
-void ds18x20SendByte(uint8_t byte);
-uint8_t ds18x20GetByte(void);
-
-uint8_t ds18x20SearchAllRoms(ds18x20Dev *devs, uint8_t maxNum);
-
-void convertTemp(void);
-
-void ds18x20GetTemp(ds18x20Dev *dev);
-
-#endif /* DS18B20_H */
+#endif /* DS18X20_H */
