@@ -87,7 +87,16 @@ int main(void)
 	adcInit();
 
 	uint8_t max = 48;
-	uint8_t i;
+	uint8_t i, j = 0;
+
+	ks0066ShowColon(7);
+	while(1) {
+		for (i = 0; i < 10; i++) {
+			ks0066ShowBigNum(i, j * 9 / 2);
+			_delay_ms(1000);
+			j = (j + 1) % 4;
+		}
+	}
 
 	adcMux(6);
 

@@ -8,14 +8,36 @@
 
 static uint8_t userSybmols = LCD_USER_SYMBOLS_EMPTY;
 
+static const uint8_t bigNumSegm[] PROGMEM = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, /* Top bar */
+	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, /* Bottom bar */
+	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x1F, 0x1F, /* Top and bottom bars */
+	0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x03, 0x00, /* Left part of colon */
+	0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x00, /* Right part of colon */
+};
+
+static const uint8_t bigNum[] PROGMEM = {
+	0xFF, 0x01, 0xFF, 0xFF, 0x00, 0xFF, /* 0 */
+	0x01, 0xff, 0x20, 0x00, 0xFF, 0x00, /* 1 */
+	0x02, 0x02, 0xFF, 0xFF, 0x00, 0x00, /* 2 */
+	0x02, 0x02, 0xFF, 0x00, 0x00, 0xFF, /* 3 */
+	0xFF, 0x00, 0xFF, 0x20, 0x20, 0xFF, /* 4 */
+	0xFF, 0x02, 0x02, 0x00, 0x00, 0xFF, /* 5 */
+	0xFF, 0x02, 0x02, 0xFF, 0x00, 0xFF, /* 6 */
+	0x01, 0x01, 0xFF, 0x20, 0x20, 0xFF, /* 7 */
+	0xFF, 0x02, 0xFF, 0xFF, 0x00, 0xFF, /* 8 */
+	0xFF, 0x02, 0xFF, 0x00, 0x00, 0xFF, /* 9 */
+};
+
+static const uint8_t colon[] PROGMEM = {
+	0x03, 0x04, 0x03, 0x04,
+};
+
 static void ks0066writeStrob()
 {
-	asm("nop");	/* 40ns */
+	_delay_us(0.05);
 	KS0066_CTRL_PORT |= KS0066_E;
-	asm("nop");	/* 230ns */
-	asm("nop");
-	asm("nop");
-	asm("nop");
+	_delay_us(0.25);
 	KS0066_CTRL_PORT &= ~KS0066_E;
 
 	return;
@@ -25,23 +47,14 @@ static uint8_t ks0066readStrob()
 {
 	uint8_t pin;
 
-	asm("nop");	/* 40ns */
+	_delay_us(0.05);
 	KS0066_CTRL_PORT |= KS0066_E;
-	asm("nop");	/* 230ns */
-	asm("nop");
-	asm("nop");
-	asm("nop");
+	_delay_us(0.25);
 	pin = swap(KS0066_DATA_PIN & 0x0F);
 	KS0066_CTRL_PORT &= ~KS0066_E;
-	asm("nop");	/* 230ns */
-	asm("nop");
-	asm("nop");
-	asm("nop");
+	_delay_us(0.25);
 	KS0066_CTRL_PORT |= KS0066_E;
-	asm("nop");	/* 230ns */
-	asm("nop");
-	asm("nop");
-	asm("nop");
+	_delay_us(0.25);
 	pin |= (KS0066_DATA_PIN & 0x0F);
 	KS0066_CTRL_PORT &= ~KS0066_E;
 
@@ -197,4 +210,50 @@ void ks0066ShowBar(uint16_t value, uint16_t max)
 			}
 		}
 	}
+}
+
+static void ks0066GenBigNum(void)
+{
+	ks0066WriteCommand(KS0066_SET_CGRAM);
+
+	uint8_t i;
+
+	for (i = 0; i < sizeof(bigNumSegm); i++)
+		ks0066WriteData(pgm_read_byte(&bigNumSegm[i]));
+
+	userSybmols = LCD_USER_SYMBOLS_BIGNUM;
+
+	return;
+}
+
+void ks0066ShowBigNum(uint16_t val, uint8_t pos)
+{
+	uint8_t i;
+
+	if (userSybmols != LCD_USER_SYMBOLS_BIGNUM)
+		ks0066GenBigNum();
+
+	ks0066SetXY(pos, 0);
+	for (i = 0; i < 6; i++) {
+		if (i == 3)
+			ks0066SetXY(pos, 1);
+		ks0066WriteData(pgm_read_byte(&bigNum[val * 6 + i]));
+	}
+	return;
+}
+
+void ks0066ShowColon(uint8_t pos)
+{
+	uint8_t i;
+
+	if (userSybmols != LCD_USER_SYMBOLS_BIGNUM)
+		ks0066GenBigNum();
+
+	ks0066SetXY(pos, 0);
+	for (i = 0; i < 4; i++) {
+		if (i == 2)
+			ks0066SetXY(pos, 1);
+		ks0066WriteData(pgm_read_byte(&colon[i]));
+	}
+	return;
 }

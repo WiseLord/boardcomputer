@@ -58,8 +58,11 @@
 #define KS0066_STA_BUSY				0x80
 
 /* User generated characters */
-#define LCD_USER_SYMBOLS_EMPTY			0
-#define LCD_USER_SYMBOLS_BAR		1
+enum {
+	LCD_USER_SYMBOLS_EMPTY,
+	LCD_USER_SYMBOLS_BAR,
+	LCD_USER_SYMBOLS_BIGNUM
+};
 
 void ks0066WriteCommand(uint8_t command);
 void ks0066WriteData(uint8_t data);
@@ -71,5 +74,7 @@ void ks0066SetXY(uint8_t x, uint8_t y);
 void ks0066WriteString(uint8_t *string);
 
 void ks0066ShowBar(uint16_t value, uint16_t max);
+void ks0066ShowBigNum(uint16_t val, uint8_t pos);
+void ks0066ShowColon(uint8_t pos);
 
 #endif /* KS0066_H */
