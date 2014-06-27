@@ -150,14 +150,14 @@ uint8_t *mkNumString(int16_t value, uint8_t width, uint8_t prec)
 	}
 
 	/* Clear buffer and go to it's tail */
-	for (pos = 0; pos < width; pos++)
+	for (pos = 0; pos < width + prec; pos++)
 		strBuf[pos] = ' ';
-	strBuf[width] = '\0';
-	pos = width - 1;
+	strBuf[width + prec] = '\0';
+	pos = width + prec - 1;
 
 	/* Fill buffer from right to left */
-	while (value > 0 || pos > width - prec - 2) {
-		if (prec && (prec == width - pos - 1))
+	while (value > 0 || pos > width - 2) {
+		if (prec && (width - pos - 1 == 0))
 			strBuf[pos--] = '.';
 		strBuf[pos] = value % 10 + 0x30;
 		pos--;

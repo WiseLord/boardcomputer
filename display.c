@@ -199,11 +199,11 @@ void showTemp(uint8_t count)
 	ks0066WriteString((uint8_t*)" \x08\x01\x02\x03""a    Ca\x01o\x04 ");
 
 	ks0066SetXY(0, 1);
-	ks0066WriteString(mkNumString(ds18x20GetTemp(0), 5, 1));
+	ks0066WriteString(mkNumString(ds18x20GetTemp(0), 4, 1));
 	ks0066WriteString((uint8_t*)"\x05""C  ");
 
 	ks0066SetXY(9, 1);
-	ks0066WriteString(mkNumString(ds18x20GetTemp(1), 5, 1));
+	ks0066WriteString(mkNumString(ds18x20GetTemp(1), 4, 1));
 	ks0066WriteString((uint8_t*)"\x05""C  ");
 
 	return;
@@ -216,7 +216,7 @@ void showBigTemp(uint8_t sensor)
 	temp = ds18x20GetTemp(sensor);
 
 	ks0066SetXY(0, 0);
-	ks0066ShowBigString(mkNumString(temp, 5, 1), 0);
+	ks0066ShowBigString(mkNumString(temp, 4, 1), 0);
 
 	return;
 }
@@ -226,7 +226,7 @@ void showVoltage(uint8_t adcMux, uint8_t xPos, uint8_t yPos)
 	adcSetMux(adcMux);
 
 	ks0066SetXY(xPos, yPos);
-	ks0066WriteString(mkNumString(adcGetVoltage(), 4, 1));
+	ks0066WriteString(mkNumString(adcGetVoltage(), 3, 1));
 	ks0066WriteData('V');
 
 }

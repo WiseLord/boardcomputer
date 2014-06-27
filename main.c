@@ -21,11 +21,13 @@ void hwInit(void)
 
 int main(void)
 {
-	hwInit();
-
 	uint16_t maxAccel = 4800;
 	uint8_t count = 0;
 	uint16_t i;
+
+	hwInit();
+	ds18x20Process();
+	_delay_ms(750);
 
 	while(1) {
 		count = ds18x20Process();
