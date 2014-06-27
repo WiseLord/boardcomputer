@@ -13,18 +13,10 @@ void hwInit(void)
 	ks0066Init();
 	adcInit();
 	mTimerInit();
+
 	sei();
 
 	return;
-}
-
-void showRPM(uint16_t rpm)
-{
-	uint16_t maxRPM = 4800;
-
-	ks0066SetXY(12, 0);
-	ks0066WriteString(mkNumString(rpm, 4, 0));
-	ks0066ShowBar(rpm, maxRPM);
 }
 
 int main(void)
@@ -38,13 +30,18 @@ int main(void)
 	while(1) {
 		count = ds18x20Process();
 		if (count) {
-			showTemp(count);
+//			showTemp(count);
+			for (i = 0; i < count; i++) {
+				showBigTemp(i);
+				_delay_ms(2000);
+			}
 		} else {
-			ks0066Clear();
+//			ks0066Clear();
 			for (i = 0; i <= maxAccel; i+=100) {
-				showVoltage(ADCMUX_BATTERY, 0, 0);
-				showVoltage(ADCMUX_VOLTS, 6, 0);
-				showRPM(i);
+//				showVoltage(ADCMUX_BATTERY, 0, 0);
+//				showVoltage(ADCMUX_VOLTS, 6, 0);
+//				showRPM(i);
+				showBigRPM(i);
 				_delay_ms(100);
 			}
 		}

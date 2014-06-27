@@ -8,7 +8,7 @@
 
 static uint8_t userSybmols = LCD_USER_SYMBOLS_EMPTY;
 
-static const uint8_t bigNumSegm[] PROGMEM = {
+static const uint8_t bigCharSegm[] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, /* Top bar */
 	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, /* Bottom bar */
 	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x1F, 0x1F, /* Top and bottom bars */
@@ -17,7 +17,7 @@ static const uint8_t bigNumSegm[] PROGMEM = {
 	0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x00, /* Right part of dot */
 };
 
-static const uint8_t bigNum[] PROGMEM = {
+static const uint8_t bigChar[] PROGMEM = {
 	0xFF, 0x01, 0xFF, 0xFF, 0x00, 0xFF, /* 0 */
 	0x01, 0xff, 0x20, 0x00, 0xFF, 0x00, /* 1 */
 	0x02, 0x02, 0xFF, 0xFF, 0x00, 0x00, /* 2 */
@@ -25,9 +25,13 @@ static const uint8_t bigNum[] PROGMEM = {
 	0xFF, 0x00, 0xFF, 0x20, 0x20, 0xFF, /* 4 */
 	0xFF, 0x02, 0x02, 0x00, 0x00, 0xFF, /* 5 */
 	0xFF, 0x02, 0x02, 0xFF, 0x00, 0xFF, /* 6 */
-	0x01, 0x01, 0xFF, 0x20, 0x20, 0xFF, /* 7 */
+	0xFF, 0x01, 0xFF, 0x20, 0x20, 0xFF, /* 7 */
 	0xFF, 0x02, 0xFF, 0xFF, 0x00, 0xFF, /* 8 */
 	0xFF, 0x02, 0xFF, 0x00, 0x00, 0xFF, /* 9 */
+	0x20, 0x20, 0x20, 0x20, 0x20, 0x20, /*   */
+	0x20, 0x20, 0x20, 0x20, 0x01, 0x01, /* - */
+	0x20, 0x20, 0x20, 0x03, 0x04, 0x20, /* . */
+	0x03, 0x04, 0x20, 0x03, 0x04, 0x20, /* : */
 };
 
 static const uint8_t tempSymbols[] PROGMEM = {
@@ -39,25 +43,29 @@ static const uint8_t tempSymbols[] PROGMEM = {
 	0x06, 0x09, 0x09, 0x06, 0x00, 0x00, 0x00, 0x00, /* ° */
 };
 
+static const uint8_t barSymbols[] PROGMEM = {
+	0x00, 0x10, 0x14, 0x15,
+};
+
 static void ks0066GenBar(void)
 {
-	ks0066WriteCommand(KS0066_SET_CGRAM);
+	uint8_t i;
+	uint8_t sym;
 
-	uint8_t j, i;
-	uint8_t bar[4] = {0x00, 0x10, 0x14, 0x15};
+	if (userSybmols != LCD_USER_SYMBOLS_BAR) {
+		ks0066WriteCommand(KS0066_SET_CGRAM);
 
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 7; j++) {
-			if (j == 3) {
-				ks0066WriteData(0x15);
-			} else {
-				ks0066WriteData(bar[i]);
-			}
+		for (i = 0; i < 8 * sizeof(barSymbols); i++) {
+			sym = i / 8;
+			if (i % 8 == 3)
+				sym = 3;
+			if (i % 8 == 7)
+				sym = 0;
+			ks0066WriteData(pgm_read_byte(&barSymbols[sym]));
 		}
-		ks0066WriteData(0x00);
-	}
 
-	userSybmols = LCD_USER_SYMBOLS_BAR;
+		userSybmols = LCD_USER_SYMBOLS_BAR;
+	}
 
 	return;
 }
@@ -66,8 +74,7 @@ void ks0066ShowBar(uint16_t value, uint16_t max)
 {
 	uint8_t i;
 
-	if (userSybmols != LCD_USER_SYMBOLS_BAR)
-		ks0066GenBar();
+	ks0066GenBar();
 
 	ks0066SetXY(0, 1);
 
@@ -85,52 +92,19 @@ void ks0066ShowBar(uint16_t value, uint16_t max)
 	}
 }
 
-static void ks0066GenBigNum(void)
-{
-	ks0066WriteCommand(KS0066_SET_CGRAM);
-
-	uint8_t i;
-
-	for (i = 0; i < sizeof(bigNumSegm); i++)
-		ks0066WriteData(pgm_read_byte(&bigNumSegm[i]));
-
-	userSybmols = LCD_USER_SYMBOLS_BIGNUM;
-
-	return;
-}
-
-void ks0066ShowBigNum(uint16_t val, uint8_t pos)
+static void ks0066GenBigSymbols(void)
 {
 	uint8_t i;
 
-	if (userSybmols != LCD_USER_SYMBOLS_BIGNUM)
-		ks0066GenBigNum();
+	if (userSybmols != LCD_USER_SYMBOLS_BIGNUM) {
 
-	ks0066SetXY(pos, 0);
-	for (i = 0; i < 6; i++) {
-		if (i == 3)
-			ks0066SetXY(pos, 1);
-		ks0066WriteData(pgm_read_byte(&bigNum[val * 6 + i]));
+		ks0066WriteCommand(KS0066_SET_CGRAM);
+
+		for (i = 0; i < sizeof(bigCharSegm); i++)
+			ks0066WriteData(pgm_read_byte(&bigCharSegm[i]));
+
+		userSybmols = LCD_USER_SYMBOLS_BIGNUM;
 	}
-	return;
-}
-
-void ks0066ShowBigDot(uint8_t x, uint8_t y)
-{
-	if (userSybmols != LCD_USER_SYMBOLS_BIGNUM)
-		ks0066GenBigNum();
-
-	ks0066SetXY(x, y);
-	ks0066WriteData(0x03);
-	ks0066WriteData(0x04);
-
-	return;
-}
-
-void ks0066ShowBigColon(uint8_t x)
-{
-	ks0066ShowBigDot(x, 0);
-	ks0066ShowBigDot(x, 1);
 
 	return;
 }
@@ -152,6 +126,71 @@ void ks0066GenTempSymbols(void)
 	return;
 }
 
+void ks0066ShowBigNum(uint16_t val, uint8_t pos)
+{
+	uint8_t i;
+
+	ks0066GenBigSymbols();
+
+	ks0066SetXY(pos, 0);
+	for (i = 0; i < 6; i++) {
+		if (i == 3)
+			ks0066SetXY(pos, 1);
+		ks0066WriteData(pgm_read_byte(&bigChar[val * 6 + i]));
+	}
+
+	return;
+}
+
+void ks0066ShowBigString(uint8_t *string, uint8_t pos)
+{
+	uint8_t ch;
+
+	while(*string) {
+		ch = *string++;
+		if (ch >= '0' && ch <= '9') {
+			ks0066ShowBigNum(ch - '0', pos);
+			pos += 4;
+		} else if (ch == ' ') {
+			ks0066ShowBigNum(10, pos);
+			pos += 4;
+		} else if (ch == '-') {
+			ks0066ShowBigNum(11, pos);
+			pos += 4;
+		} else if (ch == '.') {
+			pos--;
+			ks0066ShowBigNum(12, pos);
+			pos += 2;
+		} else if (ch == ':') {
+			pos--;
+			ks0066ShowBigNum(13, pos);
+			pos += 2;
+		}
+	}
+
+	return;
+}
+
+void showRPM(uint16_t rpm)
+{
+	uint16_t maxRPM = 4800;
+
+	ks0066SetXY(12, 0);
+	ks0066WriteString(mkNumString(rpm, 4, 0));
+	ks0066ShowBar(rpm, maxRPM);
+
+	return;
+}
+
+void showBigRPM(uint16_t rpm)
+{
+	ks0066SetXY(0, 0);
+
+	ks0066ShowBigString(mkNumString(rpm, 4, 0), 1);
+
+	return;
+}
+
 void showTemp(uint8_t count)
 {
 	ks0066GenTempSymbols();
@@ -166,6 +205,18 @@ void showTemp(uint8_t count)
 	ks0066SetXY(9, 1);
 	ks0066WriteString(mkNumString(ds18x20GetTemp(1), 5, 1));
 	ks0066WriteString((uint8_t*)"\x05""C  ");
+
+	return;
+}
+
+void showBigTemp(uint8_t sensor)
+{
+	int16_t temp;
+
+	temp = ds18x20GetTemp(sensor);
+
+	ks0066SetXY(0, 0);
+	ks0066ShowBigString(mkNumString(temp, 5, 1), 0);
 
 	return;
 }

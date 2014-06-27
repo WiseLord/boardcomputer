@@ -16,7 +16,14 @@ enum {
 
 void ks0066ShowBar(uint16_t value, uint16_t max);
 
+void ks0066ShowBigString(uint8_t *string, uint8_t pos);
+
+void showRPM(uint16_t rpm);
+void showBigRPM(uint16_t rpm);
+
 void showTemp(uint8_t count);
+void showBigTemp(uint8_t sensor);
+
 void showVoltage(uint8_t adcMux, uint8_t xPos, uint8_t yPos);
 
 #endif /* DISPLAY_H */
