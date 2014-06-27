@@ -1,43 +1,8 @@
 #include "ks0066.h"
 
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
 #include <util/delay.h>
 
 #define swap(x) (__builtin_avr_swap(x))		/*  Swaps nibbles in byte */
-
-static uint8_t userSybmols = LCD_USER_SYMBOLS_EMPTY;
-
-static const uint8_t bigNumSegm[] PROGMEM = {
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, /* Top bar */
-	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, /* Bottom bar */
-	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x1F, 0x1F, /* Top and bottom bars */
-
-	0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x03, 0x00, /* Left part of dot */
-	0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x00, /* Right part of dot */
-};
-
-static const uint8_t bigNum[] PROGMEM = {
-	0xFF, 0x01, 0xFF, 0xFF, 0x00, 0xFF, /* 0 */
-	0x01, 0xff, 0x20, 0x00, 0xFF, 0x00, /* 1 */
-	0x02, 0x02, 0xFF, 0xFF, 0x00, 0x00, /* 2 */
-	0x02, 0x02, 0xFF, 0x00, 0x00, 0xFF, /* 3 */
-	0xFF, 0x00, 0xFF, 0x20, 0x20, 0xFF, /* 4 */
-	0xFF, 0x02, 0x02, 0x00, 0x00, 0xFF, /* 5 */
-	0xFF, 0x02, 0x02, 0xFF, 0x00, 0xFF, /* 6 */
-	0x01, 0x01, 0xFF, 0x20, 0x20, 0xFF, /* 7 */
-	0xFF, 0x02, 0xFF, 0xFF, 0x00, 0xFF, /* 8 */
-	0xFF, 0x02, 0xFF, 0x00, 0x00, 0xFF, /* 9 */
-};
-
-static const uint8_t tempSymbols[] PROGMEM = {
-	0x11, 0x11, 0x11, 0x0F, 0x01, 0x01, 0x1E, 0x00, /* У */
-	0x00, 0x00, 0x07, 0x09, 0x09, 0x09, 0x11, 0x00, /* л */
-	0x00, 0x00, 0x11, 0x13, 0x15, 0x19, 0x11, 0x00, /* и */
-	0x00, 0x00, 0x12, 0x12, 0x12, 0x12, 0x1F, 0x01, /* ц */
-	0x00, 0x00, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x00, /* н */
-	0x06, 0x09, 0x09, 0x06, 0x00, 0x00, 0x00, 0x00, /* ° */
-};
 
 static void ks0066writeStrob()
 {
@@ -172,116 +137,35 @@ void ks0066WriteString(uint8_t *string)
 	return;
 }
 
-static void ks0066GenBar(void)
+uint8_t *mkNumString(int16_t value, uint8_t width, uint8_t prec)
 {
-	ks0066WriteCommand(KS0066_SET_CGRAM);
+	static uint8_t strBuf[6];
 
-	uint8_t j, i;
-	uint8_t bar[4] = {0x00, 0x10, 0x14, 0x15};
+	uint8_t sign = ' ';
+	int8_t pos;
 
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 7; j++) {
-			if (j == 3) {
-				ks0066WriteData(0x15);
-			} else {
-				ks0066WriteData(bar[i]);
-			}
-		}
-		ks0066WriteData(0x00);
+	if (value < 0) {
+		sign = '-';
+		value = -value;
 	}
 
-	userSybmols = LCD_USER_SYMBOLS_BAR;
+	/* Clear buffer and go to it's tail */
+	for (pos = 0; pos < width; pos++)
+		strBuf[pos] = ' ';
+	strBuf[width] = '\0';
+	pos = width - 1;
 
-	return;
-}
-
-void ks0066ShowBar(uint16_t value, uint16_t max)
-{
-	uint8_t i;
-
-	if (userSybmols != LCD_USER_SYMBOLS_BAR)
-		ks0066GenBar();
-
-	ks0066SetXY(0, 1);
-
-	value = value * 48 / max;
-	for (i = 0; i < 16; i++) {
-		if (value / 3 > i) {
-			ks0066WriteData(0x03);
-		} else {
-			if (value / 3 < i) {
-				ks0066WriteData(0x00);
-			} else {
-				ks0066WriteData(value % 3);
-			}
-		}
-	}
-}
-
-static void ks0066GenBigNum(void)
-{
-	ks0066WriteCommand(KS0066_SET_CGRAM);
-
-	uint8_t i;
-
-	for (i = 0; i < sizeof(bigNumSegm); i++)
-		ks0066WriteData(pgm_read_byte(&bigNumSegm[i]));
-
-	userSybmols = LCD_USER_SYMBOLS_BIGNUM;
-
-	return;
-}
-
-void ks0066ShowBigNum(uint16_t val, uint8_t pos)
-{
-	uint8_t i;
-
-	if (userSybmols != LCD_USER_SYMBOLS_BIGNUM)
-		ks0066GenBigNum();
-
-	ks0066SetXY(pos, 0);
-	for (i = 0; i < 6; i++) {
-		if (i == 3)
-			ks0066SetXY(pos, 1);
-		ks0066WriteData(pgm_read_byte(&bigNum[val * 6 + i]));
-	}
-	return;
-}
-
-void ks0066ShowBigDot(uint8_t x, uint8_t y)
-{
-	if (userSybmols != LCD_USER_SYMBOLS_BIGNUM)
-		ks0066GenBigNum();
-
-	ks0066SetXY(x, y);
-	ks0066WriteData(0x03);
-	ks0066WriteData(0x04);
-
-	return;
-}
-
-void ks0066ShowBigColon(uint8_t x)
-{
-	ks0066ShowBigDot(x, 0);
-	ks0066ShowBigDot(x, 1);
-
-	return;
-}
-
-void ks0066GenTempSymbols(void)
-{
-	if (userSybmols != LCD_USER_SYMBOLS_TEMP) {
-
-		ks0066WriteCommand(KS0066_SET_CGRAM);
-
-		uint8_t i;
-
-		for (i = 0; i < sizeof(tempSymbols); i++)
-			ks0066WriteData(pgm_read_byte(&tempSymbols[i]));
-
-		userSybmols = LCD_USER_SYMBOLS_TEMP;
+	/* Fill buffer from right to left */
+	while (value > 0 || pos > width - prec - 2) {
+		if (prec && (prec == width - pos - 1))
+			strBuf[pos--] = '.';
+		strBuf[pos] = value % 10 + 0x30;
+		pos--;
+		value /= 10;
 	}
 
-	return;
-}
+	if (pos >= 0)
+		strBuf[pos] = sign;
 
+	return strBuf;
+}

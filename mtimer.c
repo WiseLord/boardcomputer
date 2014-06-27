@@ -1,6 +1,5 @@
 #include "mtimer.h"
 
-#include <avr/io.h>
 #include <avr/interrupt.h>
 
 static volatile uint16_t tempTimer = 0;
