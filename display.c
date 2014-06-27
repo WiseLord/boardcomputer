@@ -43,6 +43,15 @@ static const uint8_t tempSymbols[] PROGMEM = {
 	0x06, 0x09, 0x09, 0x06, 0x00, 0x00, 0x00, 0x00, /* ° */
 };
 
+static const uint8_t voltSymbols[] PROGMEM = {
+	0x1F, 0x10, 0x10, 0x1E, 0x11, 0x11, 0x1E, 0x00, /* Б */
+	0x00, 0x00, 0x1F, 0x04, 0x04, 0x04, 0x04, 0x00, /* т */
+	0x00, 0x00, 0x07, 0x09, 0x07, 0x05, 0x09, 0x00, /* я */
+	0x00, 0x00, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x00, /* н */
+	0x00, 0x00, 0x07, 0x09, 0x09, 0x09, 0x11, 0x00, /* л */
+	0x00, 0x00, 0x10, 0x10, 0x1C, 0x12, 0x1C, 0x00, /* ь */
+};
+
 static const uint8_t barSymbols[] PROGMEM = {
 	0x00, 0x10, 0x14, 0x15,
 };
@@ -121,6 +130,23 @@ void ks0066GenTempSymbols(void)
 			ks0066WriteData(pgm_read_byte(&tempSymbols[i]));
 
 		userSybmols = LCD_USER_SYMBOLS_TEMP;
+	}
+
+	return;
+}
+
+void ks0066GenVoltSymbols(void)
+{
+	if (userSybmols != LCD_USER_SYMBOLS_VOLT) {
+
+		ks0066WriteCommand(KS0066_SET_CGRAM);
+
+		uint8_t i;
+
+		for (i = 0; i < sizeof(voltSymbols); i++)
+			ks0066WriteData(pgm_read_byte(&voltSymbols[i]));
+
+		userSybmols = LCD_USER_SYMBOLS_VOLT;
 	}
 
 	return;
@@ -221,12 +247,33 @@ void showBigTemp(uint8_t sensor)
 	return;
 }
 
-void showVoltage(uint8_t adcMux, uint8_t xPos, uint8_t yPos)
+static void showVoltage(uint8_t adcMux)
 {
 	adcSetMux(adcMux);
 
-	ks0066SetXY(xPos, yPos);
-	ks0066WriteString(mkNumString(adcGetVoltage(), 3, 1));
-	ks0066WriteData('V');
+	uint8_t i;
+	uint16_t avgVoltage = 0;
 
+	for (i = 0; i < 8; i++) {
+		avgVoltage += adcGetVoltage();
+	}
+
+	ks0066WriteString(mkNumString(avgVoltage >> 5, 3, 1));
+	ks0066WriteString((uint8_t*)" B");
+
+	return;
+}
+
+void showVoltageAll()
+{
+	ks0066GenVoltSymbols();
+
+	ks0066SetXY(0, 0);
+	ks0066WriteString((uint8_t*)"\x08""a""\x01""ape""\x02""   ");
+	showVoltage(ADCMUX_BATTERY);
+	ks0066SetXY(0, 1);
+	ks0066WriteString((uint8_t*)"Ko""\x03\x01""po""\x04\x05""  ");
+	showVoltage(ADCMUX_VOLTS);
+
+	return;
 }
