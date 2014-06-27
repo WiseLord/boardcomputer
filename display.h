@@ -18,8 +18,7 @@ enum {
 	LCD_USER_SYMBOLS_EMPTY,
 	LCD_USER_SYMBOLS_BAR,
 	LCD_USER_SYMBOLS_BIGNUM,
-    LCD_USER_SYMBOLS_TEMP,
-    LCD_USER_SYMBOLS_VOLT
+	LCD_USER_SYMBOLS_TEMPVOLT
 };
 
 void ks0066ShowBar(uint16_t value, uint16_t max);
@@ -29,7 +28,7 @@ void ks0066ShowBigString(uint8_t *string, uint8_t pos);
 void showRPM(uint16_t rpm);
 void showBigRPM(uint16_t rpm);
 
-void showTemp(uint8_t count);
+void showTempAll(uint8_t count);
 void showBigTemp(uint8_t sensor);
 
 void showVoltageAll();

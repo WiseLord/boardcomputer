@@ -23,34 +23,17 @@ int main(void)
 {
 //	uint16_t maxAccel = 4800;
 	uint8_t count = 0;
-//	uint16_t i;
 
 	hwInit();
 	ds18x20Process();
-	_delay_ms(750);
+	showVoltageAll();
+	_delay_ms(2000);
 
-	uint8_t dispMode = MODE_VOLTAGE;
+	uint8_t dispMode = MODE_TEMP;
 	uint8_t dispModePrev = dispMode;
 
 	while(1) {
 		count = ds18x20Process();
-
-//		if (count) {
-////			showTemp(count);
-//			for (i = 0; i < count; i++) {
-//				showBigTemp(i);
-//				_delay_ms(2000);
-//			}
-//		} else {
-////			ks0066Clear();
-//			for (i = 0; i <= maxAccel; i+=100) {
-////				showVoltage(ADCMUX_BATTERY, 0, 0);
-////				showVoltage(ADCMUX_VOLTS, 6, 0);
-////				showRPM(i);
-//				showBigRPM(i);
-//				_delay_ms(100);
-//			}
-//		}
 
 		/* Clear screen if mode has changed */
 		if (dispMode != dispModePrev)
@@ -59,7 +42,7 @@ int main(void)
 		/* Show things */
 		switch (dispMode) {
 		case MODE_TEMP:
-			showTemp(count);
+			showTempAll(count);
 			break;
 		case MODE_VOLTAGE:
 			showVoltageAll();
