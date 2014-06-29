@@ -13,10 +13,11 @@ enum {
 	MODE_BIG_VOLT_BATTERY,
 	MODE_BIG_VOLT_BOARD,
 	MODE_CLOCK,
-	MODE_CLOCK_EDIT_H,
-	MODE_CLOCK_EDIT_M,
+	MODE_EDIT_H,
+	MODE_EDIT_M,
 	MODE_RPM,
-	MODE_BIG_RPM
+	MODE_BIG_RPM,
+	MODE_EDIT_RPM
 };
 
 /* User generated characters */
@@ -43,6 +44,7 @@ void ks0066ShowBigString(uint8_t *string, uint8_t pos);
 
 void showRPM(uint16_t rpm);
 void showBigRPM(uint16_t rpm);
+void showEditRPM(uint16_t rpm);
 
 void showTemp(uint8_t count);
 void showBigTemp(uint8_t sensor);

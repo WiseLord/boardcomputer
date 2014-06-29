@@ -3,16 +3,21 @@
 #include "mtimer.h"
 #include "adcvolt.h"
 #include "display.h"
+#include "taho.h"
 
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/eeprom.h>
+
+#define EEPROM_PPT	((void*)0x01F0)
 
 void hwInit(void)
 {
 	ks0066Init();
 	adcInit();
 	mTimerInit();
+	tahoInit(eeprom_read_byte(EEPROM_PPT));
 
 	sei();
 
@@ -37,7 +42,7 @@ int main(void)
 {
 	uint8_t count = 0;
 	uint8_t cmd = CMD_EMPTY;
-	static uint16_t rpm = 0;
+	uint16_t rpm;
 
 	hwInit();
 	ds18x20Process();
@@ -54,10 +59,7 @@ int main(void)
 	while(1) {
 		count = ds18x20Process();
 		cmd = getBtnCmd();
-
-		rpm++;
-		if (rpm > 7200)
-			rpm = 0;
+		rpm = getTaho();
 
 		/* Don't handle any command in standby mode except power on */
 		if (dispMode == MODE_STANDBY) {
@@ -68,79 +70,87 @@ int main(void)
 		/* Handle command */
 		switch (cmd) {
 		case CMD_BTN_1:
-			if (dispMode == MODE_CLOCK_EDIT_H) {
+			if (dispMode == MODE_EDIT_RPM) {
+				setPpt(getPpt() - 1);
+				break;
+			}
+			if (dispMode == MODE_EDIT_H) {
 				clockDecHour();
 				break;
 			}
-			if (dispMode == MODE_CLOCK_EDIT_M) {
+			if (dispMode == MODE_EDIT_M) {
 				clockDecMin();
-				break;
-			}
-			dispMode = dispModeVoltage;
-			break;
-		case CMD_BTN_1_LONG:
-			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
 				break;
 			}
 			if (dispMode == MODE_BIG_VOLT_BATTERY)
 				dispModeVoltage = MODE_BIG_VOLT_BOARD;
+			else if (dispMode == MODE_BIG_VOLT_BOARD)
+				dispModeVoltage = MODE_VOLTAGE;
 			else if (dispMode == MODE_VOLTAGE)
 				dispModeVoltage = MODE_BIG_VOLT_BATTERY;
-			else
-				dispModeVoltage = MODE_VOLTAGE;
 
 			dispMode = dispModeVoltage;
 			break;
 		case CMD_BTN_2:
-			if (dispMode == MODE_CLOCK_EDIT_H) {
+			if (dispMode == MODE_EDIT_RPM) {
+				setPpt(getPpt() + 1);
+				break;
+			}
+			if (dispMode == MODE_EDIT_H) {
 				clockIncHour();
 				break;
 			}
-			if (dispMode == MODE_CLOCK_EDIT_M) {
+			if (dispMode == MODE_EDIT_M) {
 				clockIncMin();
-				break;
-			}
-			dispMode = dispModeTemp;
-			break;
-		case CMD_BTN_2_LONG:
-			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
 				break;
 			}
 			if (dispMode == MODE_BIG_TEMP_CAR)
 				dispModeTemp = MODE_BIG_TEMP_OUT;
+			else if (dispMode == MODE_BIG_TEMP_OUT)
+				dispModeTemp = MODE_TEMP;
 			else if (dispMode == MODE_TEMP)
 				dispModeTemp = MODE_BIG_TEMP_CAR;
-			else
-				dispModeTemp = MODE_TEMP;
 			dispMode = dispModeTemp;
 			break;
 		case CMD_BTN_3:
-			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
-				break;
-			}
-			dispMode = dispModeRpm;
-			break;
-		case CMD_BTN_3_LONG:
-			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
+			if (dispMode == MODE_EDIT_H || dispMode == MODE_EDIT_M || dispMode == MODE_EDIT_RPM) {
 				break;
 			}
 			if (dispMode == MODE_RPM)
 				dispModeRpm = MODE_BIG_RPM;
-			else
+			else if (dispMode == MODE_BIG_RPM)
 				dispModeRpm = MODE_RPM;
 			dispMode = dispModeRpm;
 			break;
+		case CMD_BTN_3_LONG:
+			if (dispMode == MODE_EDIT_H || dispMode == MODE_EDIT_M) {
+				break;
+			}
+			if (dispMode == MODE_RPM || dispMode == MODE_BIG_RPM)
+				dispModeRpm = MODE_EDIT_RPM;
+			else if (dispMode == MODE_EDIT_RPM) {
+				dispModeRpm = MODE_RPM;
+				eeprom_update_byte(EEPROM_PPT, getPpt());
+			}
+			dispMode = dispModeRpm;
+			break;
 		case CMD_BTN_4:
-			if (dispMode == MODE_CLOCK_EDIT_H)
-				dispModeClock = MODE_CLOCK_EDIT_M;
-			else if (dispMode == MODE_CLOCK_EDIT_M)
-				dispModeClock = MODE_CLOCK_EDIT_H;
+			if (dispMode == MODE_EDIT_RPM) {
+				break;
+			}
+			if (dispMode == MODE_EDIT_H)
+				dispModeClock = MODE_EDIT_M;
+			else if (dispMode == MODE_EDIT_M)
+				dispModeClock = MODE_EDIT_H;
 			else dispModeClock = MODE_CLOCK;
 			dispMode = dispModeClock;
 			break;
 		case CMD_BTN_4_LONG:
+			if (dispMode == MODE_EDIT_RPM) {
+				break;
+			}
 			if (dispMode == MODE_CLOCK)
-				dispModeClock = MODE_CLOCK_EDIT_H;
+				dispModeClock = MODE_EDIT_H;
 			else
 				dispModeClock = MODE_CLOCK;
 			dispMode = dispModeClock;
@@ -183,10 +193,10 @@ int main(void)
 		case MODE_CLOCK:
 			showClock(getClock(CLOCK_NOEDIT));
 			break;
-		case MODE_CLOCK_EDIT_H:
+		case MODE_EDIT_H:
 			showClock(getClock(CLOCK_EDIT_H));
 			break;
-		case MODE_CLOCK_EDIT_M:
+		case MODE_EDIT_M:
 			showClock(getClock(CLOCK_EDIT_M));
 			break;
 		case MODE_RPM:
@@ -194,6 +204,9 @@ int main(void)
 			break;
 		case MODE_BIG_RPM:
 			showBigRPM(rpm);
+			break;
+		case MODE_EDIT_RPM:
+			showEditRPM(rpm);
 			break;
 		case MODE_STANDBY:
 			showClock(getClock(CLOCK_NOEDIT));

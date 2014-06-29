@@ -3,6 +3,7 @@
 #include "ks0066.h"
 #include "ds18x20.h"
 #include "adcvolt.h"
+#include "taho.h"
 
 #include <avr/pgmspace.h>
 
@@ -54,6 +55,12 @@ static const uint8_t barSymbols[] PROGMEM = {
 	0x00, 0x10, 0x14, 0x15,
 };
 
+static const uint8_t rpmChars[] PROGMEM = {
+	0x11, 0x11, 0x13, 0x15, 0x19, 0x11, 0x11, 0x00, /* И */
+	0x1F, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x00, /* П */
+	0x1F, 0x10, 0x10, 0x1E, 0x11, 0x11, 0x1E, 0x00, /* Б */
+};
+
 static const uint8_t icon5[] PROGMEM = {
 	0x05, 0x06, 0x20, 0x05, 0x06, /* Houses */
 	0xFF, 0xFF, 0x00, 0xFF, 0xFF,
@@ -70,7 +77,7 @@ static void ks0066GenBar(void)
 	if (userSybmols != LCD_USER_SYMBOLS_BAR) {
 		ks0066WriteCommand(KS0066_SET_CGRAM);
 
-		for (i = 0; i < 8 * sizeof(barSymbols); i++) {
+		for (i = 0; i < 8 * 4; i++) {
 			sym = i / 8;
 			if (i % 8 == 3)
 				sym = 3;
@@ -78,6 +85,8 @@ static void ks0066GenBar(void)
 				sym = 0;
 			ks0066WriteData(pgm_read_byte(&barSymbols[sym]));
 		}
+		for (i = 0; i < sizeof(rpmChars); i++)
+			ks0066WriteData(pgm_read_byte(&rpmChars[i]));
 
 		userSybmols = LCD_USER_SYMBOLS_BAR;
 	}
@@ -201,6 +210,21 @@ void showBigRPM(uint16_t rpm)
 	ks0066SetXY(0, 0);
 
 	ks0066ShowBigString(mkNumString(rpm, 4, 0), 1);
+
+	return;
+}
+
+void showEditRPM(uint16_t rpm)
+{
+	ks0066GenBar();
+
+	ks0066SetXY(0, 0);
+	ks0066WriteString((uint8_t*)"TAXOMETP   ");
+	ks0066WriteString(mkNumString(rpm, 5, 0));
+
+	ks0066SetXY(0, 1);
+	ks0066WriteString((uint8_t*)"\x04M\x05/O\x06OPOT   ");
+	ks0066WriteString(mkNumString(getPpt(), 3, 0));
 
 	return;
 }
