@@ -53,7 +53,7 @@ int main(void)
 	uint8_t dispModeTemp = MODE_TEMP;
 	uint8_t dispModeRpm = MODE_RPM;
 	uint8_t dispModeVoltage = MODE_VOLTAGE;
-	uint8_t dispModeClock = MODE_CLOCK;
+	uint8_t dispModeClock = MODE_BIG_CLOCK;
 
 	uint8_t dispModePrev = dispMode;
 	uint8_t dispModePrevActive = dispMode;
@@ -170,17 +170,20 @@ int main(void)
 				dispModeClock = MODE_EDIT_M;
 			else if (dispMode == MODE_EDIT_M)
 				dispModeClock = MODE_EDIT_H;
-			else dispModeClock = MODE_CLOCK;
+			else if (dispMode == MODE_CLOCK)
+				dispModeClock = MODE_BIG_CLOCK;
+			else if (dispMode == MODE_BIG_CLOCK)
+				dispModeClock = MODE_CLOCK;
 			dispMode = dispModeClock;
 			break;
 		case CMD_BTN_4_LONG:
 			if (dispMode == MODE_EDIT_RPM) {
 				break;
 			}
-			if (dispMode == MODE_CLOCK)
+			if (dispMode == MODE_BIG_CLOCK)
 				dispModeClock = MODE_EDIT_H;
 			else
-				dispModeClock = MODE_CLOCK;
+				dispModeClock = MODE_BIG_CLOCK;
 			dispMode = dispModeClock;
 			break;
 		case CMD_BTN_5:
@@ -219,13 +222,16 @@ int main(void)
 			showBigVoltage(VOLTAGE_BOARD);
 			break;
 		case MODE_CLOCK:
-			showClock(getClock(CLOCK_NOEDIT));
+			showClock(getClock(CLOCK_NOEDIT, BLINK_CLOCK_OFF));
+			break;
+		case MODE_BIG_CLOCK:
+			showBigClock(getClock(CLOCK_NOEDIT, BLINK_CLOCK_ON));
 			break;
 		case MODE_EDIT_H:
-			showClock(getClock(CLOCK_EDIT_H));
+			showBigClock(getClock(CLOCK_EDIT_H, BLINK_CLOCK_ON));
 			break;
 		case MODE_EDIT_M:
-			showClock(getClock(CLOCK_EDIT_M));
+			showBigClock(getClock(CLOCK_EDIT_M, BLINK_CLOCK_ON));
 			break;
 		case MODE_RPM:
 			showRPM(rpm);
@@ -240,7 +246,7 @@ int main(void)
 			showEditRPM(rpm);
 			break;
 		case MODE_STANDBY:
-			showClock(getClock(CLOCK_NOEDIT));
+			showBigClock(getClock(CLOCK_NOEDIT, BLINK_CLOCK_ON));
 			break;
 		}
 

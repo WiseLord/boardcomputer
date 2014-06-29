@@ -86,14 +86,16 @@ static void incClock()
 	return;
 }
 
-uint8_t *getClock(uint8_t clkEdit)
+uint8_t *getClock(uint8_t clkEdit, uint8_t blink)
 {
-	static uint8_t *clockString = (uint8_t*)"  :  ";
+	static uint8_t *clockString = (uint8_t*)"  :  :  ";
 
 	clockString[0] = time.hour / 10 + '0';
 	clockString[1] = time.hour % 10 + '0';
 	clockString[3] = time.min / 10 + '0';
 	clockString[4] = time.min % 10 + '0';
+	clockString[6] = time.sec / 10 + '0';
+	clockString[7] = time.sec % 10 + '0';
 
 	if (time.tsec == 0 || time.tsec == 5) {
 		if (clkEdit == CLOCK_EDIT_H) {
@@ -106,10 +108,15 @@ uint8_t *getClock(uint8_t clkEdit)
 		}
 	}
 
-	if (time.tsec < 6)
-		clockString[2] = ':';
-	else
-		clockString[2] = '`';
+	if (blink) {
+		if (time.tsec < 6) {
+			clockString[2] = ':';
+			clockString[5] = ':';
+		} else {
+			clockString[2] = '`';
+			clockString[5] = '`';
+		}
+	}
 
 	return clockString;
 }

@@ -59,7 +59,7 @@ void clockIncHour();
 void clockDecHour();
 void clockIncMin();
 void clockDecMin();
-uint8_t *getClock(uint8_t clkEdit);
+uint8_t *getClock(uint8_t clkEdit, uint8_t blink);
 
 uint16_t getTempTimer();
 void setTempTimer(uint16_t val);

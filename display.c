@@ -49,6 +49,7 @@ static const uint8_t tempVoltSymbols[] PROGMEM = {
 	0x1F, 0x10, 0x10, 0x1E, 0x11, 0x11, 0x1E, 0x00, /* Б */
 	0x0F, 0x11, 0x11, 0x0F, 0x05, 0x09, 0x11, 0x00, /* Я */
 	0x06, 0x09, 0x09, 0x06, 0x00, 0x00, 0x00, 0x00, /* ° */
+	0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F, 0x00, /* Battery */
 };
 
 static const uint8_t barSymbols[] PROGMEM = {
@@ -296,9 +297,9 @@ void showEditRPM(uint16_t rpm)
 	return;
 }
 
-void showSensorTemp(uint8_t sensor, uint8_t pos)
+static void showSensorTemp(uint8_t sensor, uint8_t x, uint8_t y)
 {
-	ks0066SetXY(pos, 1);
+	ks0066SetXY(x, y);
 	ks0066WriteString(mkNumString(ds18x20GetTemp(sensor), 4, 1));
 	ks0066WriteString((uint8_t*)"\x06""C  ");
 
@@ -312,8 +313,8 @@ void showTemp(uint8_t count)
 	ks0066SetXY(0, 0);
 	ks0066WriteString((uint8_t*)" CА\x01""OH    \x08\x01\x02\x03""А ");
 
-	showSensorTemp(0, 9);
-	showSensorTemp(1, 0);
+	showSensorTemp(0, 9, 1);
+	showSensorTemp(1, 0, 1);
 
 	return;
 }
@@ -397,9 +398,26 @@ void showVoltageAll(void)
 	return;
 }
 
-void showClock(uint8_t *clkString)
+void showBigClock(uint8_t *clkString)
 {
 	ks0066ShowBigString(clkString, 0);
+
+	return;
+}
+
+void showClock(uint8_t *clkString)
+{
+	ks0066GenSymbols(LCD_USER_SYMBOLS_TEMPVOLT, tempVoltSymbols);
+
+	ks0066SetXY(0, 0);
+	ks0066WriteString(clkString);
+
+	ks0066SetXY(0, 1);
+	ks0066WriteString((uint8_t*)"\x07 ");
+	showVoltage(VOLTAGE_BATTERY);
+
+	showSensorTemp(0, 9, 1);
+	showSensorTemp(1, 9, 0);
 
 	return;
 }

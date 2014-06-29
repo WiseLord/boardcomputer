@@ -3,6 +3,9 @@
 
 #include <avr/io.h>
 
+#define BLINK_CLOCK_OFF		0
+#define BLINK_CLOCK_ON		1
+
 /* Display modes */
 enum {
 	MODE_STANDBY,
@@ -13,6 +16,7 @@ enum {
 	MODE_BIG_VOLT_BATTERY,
 	MODE_BIG_VOLT_BOARD,
 	MODE_CLOCK,
+	MODE_BIG_CLOCK,
 	MODE_EDIT_H,
 	MODE_EDIT_M,
 	MODE_RPM,
@@ -56,6 +60,7 @@ uint8_t getAvgVoltage(uint8_t sensor);
 void showVoltageAll(void);
 void showBigVoltage(uint8_t sensor);
 
+void showBigClock(uint8_t *clkString);
 void showClock(uint8_t *clkString);
 
 #endif /* DISPLAY_H */
