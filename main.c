@@ -43,6 +43,8 @@ int main(void)
 	uint8_t count = 0;
 	uint8_t cmd = CMD_EMPTY;
 	uint16_t rpm;
+	uint8_t brdVolt = 0;
+	uint8_t brdVoltPrev = 0;
 
 	hwInit();
 	ds18x20Process();
@@ -60,11 +62,35 @@ int main(void)
 		count = ds18x20Process();
 		cmd = getBtnCmd();
 		rpm = getTaho();
+		brdVolt = getAvgVoltage(VOLTAGE_BOARD);
+
+		if (getStbyTimer() == 0) {
+			goStby();
+			dispMode = MODE_STANDBY;
+		}
 
 		/* Don't handle any command in standby mode except power on */
 		if (dispMode == MODE_STANDBY) {
 			if (cmd != CMD_BTN_5)
 				cmd = CMD_EMPTY;
+		}
+
+		/* Turn on if board voltage has changed from <0.5V to >10V */
+		if (dispMode == MODE_STANDBY && brdVoltPrev < 5 && brdVolt > 100) {
+			setStbyTimer(IGNITION_TIMEOUT);
+			dispMode = dispModePrevActive;
+			exitStby();
+		}
+		brdVoltPrev = brdVolt;
+
+		/* Stay active if generator is on */
+		if (rpm > 100 && dispMode != MODE_STANDBY) {
+			setStbyTimer(DISP_TIMEOUT);
+		}
+
+		/* Stay active if any button is pressed */
+		if (cmd != CMD_EMPTY) {
+			setStbyTimer(DISP_TIMEOUT);
 		}
 
 		/* Handle command */

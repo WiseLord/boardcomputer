@@ -16,9 +16,13 @@
 
 #define BTN_MASK	(BTN_1 | BTN_2 | BTN_3 | BTN_4 | BTN_5)
 
-// Handling long press actions */
+/* Handling long press actions */
 #define SHORT_PRESS		50
 #define LONG_PRESS		500
+
+/* Display timeout when generator is off */
+#define IGNITION_TIMEOUT 5000U
+#define DISP_TIMEOUT 5000U
 
 enum {
 	CLOCK_NOEDIT,
@@ -59,6 +63,9 @@ uint8_t *getClock(uint8_t clkEdit);
 
 uint16_t getTempTimer();
 void setTempTimer(uint16_t val);
+
+uint16_t getStbyTimer();
+void setStbyTimer(uint16_t val);
 
 uint8_t getBtnCmd(void);
 

@@ -36,8 +36,8 @@ enum {
 };
 
 enum {
-	VOLTAGE_BATTERY = 0,
-	VOLTAGE_BOARD = 1
+	VOLTAGE_BATTERY = 6,
+	VOLTAGE_BOARD = 7
 };
 
 void ks0066ShowBar(uint16_t value, uint16_t max);
@@ -52,6 +52,7 @@ void showEditRPM(uint16_t rpm);
 void showTemp(uint8_t count);
 void showBigTemp(uint8_t sensor);
 
+uint8_t getAvgVoltage(uint8_t sensor);
 void showVoltageAll(void);
 void showBigVoltage(uint8_t sensor);
 

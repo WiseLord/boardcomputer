@@ -5,6 +5,6 @@
 
 void adcInit(void);
 void adcSetMux(uint8_t mux);
-uint16_t adcGetVoltage(void);
+uint16_t adcGetVoltage(uint8_t mux);
 
 #endif /* ADCVOLT_H */

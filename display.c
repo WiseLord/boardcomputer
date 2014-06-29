@@ -351,18 +351,20 @@ void showBigTemp(uint8_t sensor)
 	return;
 }
 
-void showBigVoltage(uint8_t sensor)
+uint8_t getAvgVoltage(uint8_t sensor)
 {
-	adcSetMux(sensor + 6);
-
 	uint8_t i;
 	uint16_t avgVoltage = 0;
 
-	for (i = 0; i < 8; i++) {
-		avgVoltage += adcGetVoltage();
-	}
+	for (i = 0; i < 8; i++)
+		avgVoltage += adcGetVoltage(sensor);
 
-	ks0066ShowBigString(mkNumString(avgVoltage >> 5, 3, 1), 4);
+	return avgVoltage >>= 5;
+}
+
+void showBigVoltage(uint8_t sensor)
+{
+	ks0066ShowBigString(mkNumString(getAvgVoltage(sensor), 3, 1), 4);
 
 	ks0066SetXY(0, sensor);
 	if (sensor == VOLTAGE_BATTERY)
@@ -375,16 +377,7 @@ void showBigVoltage(uint8_t sensor)
 
 static void showVoltage(uint8_t sensor)
 {
-	adcSetMux(sensor + 6);
-
-	uint8_t i;
-	uint16_t avgVoltage = 0;
-
-	for (i = 0; i < 8; i++) {
-		avgVoltage += adcGetVoltage();
-	}
-
-	ks0066WriteString(mkNumString(avgVoltage >> 5, 3, 1));
+	ks0066WriteString(mkNumString(getAvgVoltage(sensor), 3, 1));
 	ks0066WriteString((uint8_t*)" B");
 
 	return;

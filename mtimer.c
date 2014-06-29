@@ -5,8 +5,8 @@
 static volatile uint8_t cmdBuf;
 
 static volatile uint16_t tempTimer;				/* Timer of temperature measuring process */
-static volatile uint16_t dispTimer;				/* Timer of current display mode */
 static volatile uint16_t clockTimer;			/* 1 second timer */
+static volatile uint16_t stbyTimer;				/* Standby mode timer */
 
 static volatile clock time = {12, 00, 00};
 
@@ -26,7 +26,7 @@ void mTimerInit(void)
 
 	cmdBuf = CMD_EMPTY;
 	tempTimer = 0;
-	dispTimer = 0;
+	stbyTimer = DISP_TIMEOUT;
 
 	return;
 }
@@ -171,11 +171,11 @@ ISR (TIMER2_COMP_vect)
 		btnCnt = 0;
 	}
 
-	if (dispTimer)
-		dispTimer--;
-
 	if (tempTimer)
 		tempTimer--;
+
+	if (stbyTimer)
+		stbyTimer--;
 
 	if (++clockTimer >= 100) {
 		incClock();
@@ -191,6 +191,16 @@ uint16_t getTempTimer()
 void setTempTimer(uint16_t val)
 {
 	tempTimer = val;
+}
+
+uint16_t getStbyTimer()
+{
+	return stbyTimer;
+}
+
+void setStbyTimer(uint16_t val)
+{
+	stbyTimer = val;
 }
 
 uint8_t getBtnCmd(void)
