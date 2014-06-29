@@ -21,6 +21,12 @@
 #define LONG_PRESS		500
 
 enum {
+	CLOCK_NOEDIT,
+	CLOCK_EDIT_H,
+	CLOCK_EDIT_M
+};
+
+enum {
 	CMD_BTN_1,
 	CMD_BTN_2,
 	CMD_BTN_3,
@@ -39,11 +45,17 @@ typedef struct {
 	int8_t hour;
 	int8_t min;
 	int8_t sec;
-	int8_t hsec;	/* 1/100 of second */
+	int8_t tsec;	/* 1/10 of second */
 } clock;
 
 void mTimerInit(void);
-uint8_t *getClock();
+
+
+void clockIncHour();
+void clockDecHour();
+void clockIncMin();
+void clockDecMin();
+uint8_t *getClock(uint8_t clkEdit);
 
 uint16_t getTempTimer();
 void setTempTimer(uint16_t val);

@@ -31,11 +31,45 @@ void mTimerInit(void)
 	return;
 }
 
+void clockIncHour()
+{
+	time.hour++;
+	if (time.hour >= 24)
+		time.hour = 0;
+	return;
+}
+
+void clockDecHour()
+{
+	time.hour--;
+	if (time.hour < 0)
+		time.hour = 23;
+	return;
+}
+
+void clockIncMin()
+{
+	time.sec = 0;
+	time.min++;
+	if (time.min >= 60)
+		time.min = 0;
+	return;
+}
+
+void clockDecMin()
+{
+	time.sec = 0;
+	time.min--;
+	if (time.min < 0)
+		time.min = 59;
+	return;
+}
+
 static void incClock()
 {
-	time.hsec++;
-	if (time.hsec >= 100) {
-		time.hsec = 0;
+	time.tsec++;
+	if (time.tsec >= 10) {
+		time.tsec = 0;
 		time.sec++;
 	}
 	if (time.sec >= 60) {
@@ -52,24 +86,30 @@ static void incClock()
 	return;
 }
 
-uint8_t *getClock()
+uint8_t *getClock(uint8_t clkEdit)
 {
-	static uint8_t *clockString = (uint8_t*)"  :  :  ";
+	static uint8_t *clockString = (uint8_t*)"  :  ";
 
 	clockString[0] = time.hour / 10 + '0';
 	clockString[1] = time.hour % 10 + '0';
 	clockString[3] = time.min / 10 + '0';
 	clockString[4] = time.min % 10 + '0';
-	clockString[6] = time.sec / 10 + '0';
-	clockString[7] = time.sec % 10 + '0';
 
-	if (time.hsec < 60) {
-		clockString[2] = ':';
-		clockString[5] = ':';
-	} else {
-		clockString[2] = '`';
-		clockString[5] = '`';
+	if (time.tsec == 0 || time.tsec == 5) {
+		if (clkEdit == CLOCK_EDIT_H) {
+			clockString[0] = ' ';
+			clockString[1] = ' ';
+		}
+		if (clkEdit == CLOCK_EDIT_M) {
+			clockString[3] = ' ';
+			clockString[4] = ' ';
+		}
 	}
+
+	if (time.tsec < 6)
+		clockString[2] = ':';
+	else
+		clockString[2] = '`';
 
 	return clockString;
 }
@@ -137,7 +177,7 @@ ISR (TIMER2_COMP_vect)
 	if (tempTimer)
 		tempTimer--;
 
-	if (++clockTimer >= 10) {
+	if (++clockTimer >= 100) {
 		incClock();
 		clockTimer = 0;
 	}

@@ -315,7 +315,7 @@ void showVoltageAll(void)
 	return;
 }
 
-void showBigClock(uint8_t *clkString)
+void showClock(uint8_t *clkString)
 {
 	ks0066ShowBigString(clkString, 0);
 

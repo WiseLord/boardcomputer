@@ -23,7 +23,6 @@ int main(void)
 {
 	uint8_t count = 0;
 	uint8_t cmd = CMD_EMPTY;
-	uint8_t *clkString;
 	static uint16_t rpm = 0;
 
 	hwInit();
@@ -33,13 +32,13 @@ int main(void)
 	uint8_t dispModeTemp = MODE_TEMP;
 	uint8_t dispModeRpm = MODE_RPM;
 	uint8_t dispModeVoltage = MODE_VOLTAGE;
+	uint8_t dispModeClock = MODE_CLOCK;
 
 	uint8_t dispModePrev = dispMode;
 
 	while(1) {
 		count = ds18x20Process();
 		cmd = getBtnCmd();
-		clkString = getClock();
 
 		rpm++;
 		if (rpm > 7200)
@@ -48,9 +47,20 @@ int main(void)
 		/* Handle command */
 		switch (cmd) {
 		case CMD_BTN_1:
+			if (dispMode == MODE_CLOCK_EDIT_H) {
+				clockDecHour();
+				break;
+			}
+			if (dispMode == MODE_CLOCK_EDIT_M) {
+				clockDecMin();
+				break;
+			}
 			dispMode = dispModeVoltage;
 			break;
 		case CMD_BTN_1_LONG:
+			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
+				break;
+			}
 			if (dispMode == MODE_BIG_VOLT_BATTERY)
 				dispModeVoltage = MODE_BIG_VOLT_BOARD;
 			else if (dispMode == MODE_VOLTAGE)
@@ -61,9 +71,20 @@ int main(void)
 			dispMode = dispModeVoltage;
 			break;
 		case CMD_BTN_2:
+			if (dispMode == MODE_CLOCK_EDIT_H) {
+				clockIncHour();
+				break;
+			}
+			if (dispMode == MODE_CLOCK_EDIT_M) {
+				clockIncMin();
+				break;
+			}
 			dispMode = dispModeTemp;
 			break;
 		case CMD_BTN_2_LONG:
+			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
+				break;
+			}
 			if (dispMode == MODE_BIG_TEMP_CAR)
 				dispModeTemp = MODE_BIG_TEMP_OUT;
 			else if (dispMode == MODE_TEMP)
@@ -73,9 +94,15 @@ int main(void)
 			dispMode = dispModeTemp;
 			break;
 		case CMD_BTN_3:
+			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
+				break;
+			}
 			dispMode = dispModeRpm;
 			break;
 		case CMD_BTN_3_LONG:
+			if (dispMode == MODE_CLOCK_EDIT_H || dispMode == MODE_CLOCK_EDIT_M) {
+				break;
+			}
 			if (dispMode == MODE_RPM)
 				dispModeRpm = MODE_BIG_RPM;
 			else
@@ -83,7 +110,19 @@ int main(void)
 			dispMode = dispModeRpm;
 			break;
 		case CMD_BTN_4:
-			dispMode = MODE_BIG_CLOCK;
+			if (dispMode == MODE_CLOCK_EDIT_H)
+				dispModeClock = MODE_CLOCK_EDIT_M;
+			else if (dispMode == MODE_CLOCK_EDIT_M)
+				dispModeClock = MODE_CLOCK_EDIT_H;
+			else dispModeClock = MODE_CLOCK;
+			dispMode = dispModeClock;
+			break;
+		case CMD_BTN_4_LONG:
+			if (dispMode == MODE_CLOCK)
+				dispModeClock = MODE_CLOCK_EDIT_H;
+			else
+				dispModeClock = MODE_CLOCK;
+			dispMode = dispModeClock;
 			break;
 		default:
 			break;
@@ -113,8 +152,14 @@ int main(void)
 		case MODE_BIG_VOLT_BOARD:
 			showBigVoltage(VOLTAGE_BOARD);
 			break;
-		case MODE_BIG_CLOCK:
-			showBigClock(clkString);
+		case MODE_CLOCK:
+			showClock(getClock(CLOCK_NOEDIT));
+			break;
+		case MODE_CLOCK_EDIT_H:
+			showClock(getClock(CLOCK_EDIT_H));
+			break;
+		case MODE_CLOCK_EDIT_M:
+			showClock(getClock(CLOCK_EDIT_M));
 			break;
 		case MODE_RPM:
 			showRPM(rpm);
