@@ -8,7 +8,7 @@ static volatile uint16_t tempTimer;				/* Timer of temperature measuring process
 static volatile uint16_t dispTimer;				/* Timer of current display mode */
 static volatile uint16_t clockTimer;			/* 1 second timer */
 
-static volatile clock time = {13, 14, 50};
+static volatile clock time = {12, 00, 00};
 
 void mTimerInit(void)
 {

@@ -19,6 +19,20 @@ void hwInit(void)
 	return;
 }
 
+void goStby(void)
+{
+	KS0066_BCKL_PORT &= ~KS0066_BCKL;
+
+	return;
+}
+
+void exitStby(void)
+{
+	KS0066_BCKL_PORT |= KS0066_BCKL;
+
+	return;
+}
+
 int main(void)
 {
 	uint8_t count = 0;
@@ -35,6 +49,7 @@ int main(void)
 	uint8_t dispModeClock = MODE_CLOCK;
 
 	uint8_t dispModePrev = dispMode;
+	uint8_t dispModePrevActive = dispMode;
 
 	while(1) {
 		count = ds18x20Process();
@@ -43,6 +58,12 @@ int main(void)
 		rpm++;
 		if (rpm > 7200)
 			rpm = 0;
+
+		/* Don't handle any command in standby mode except power on */
+		if (dispMode == MODE_STANDBY) {
+			if (cmd != CMD_BTN_5)
+				cmd = CMD_EMPTY;
+		}
 
 		/* Handle command */
 		switch (cmd) {
@@ -124,7 +145,14 @@ int main(void)
 				dispModeClock = MODE_CLOCK;
 			dispMode = dispModeClock;
 			break;
-		default:
+		case CMD_BTN_5:
+			if (dispMode == MODE_STANDBY) {
+				exitStby();
+				dispMode = dispModePrevActive;
+			} else {
+				goStby();
+				dispMode = MODE_STANDBY;
+			}
 			break;
 		}
 
@@ -167,10 +195,15 @@ int main(void)
 		case MODE_BIG_RPM:
 			showBigRPM(rpm);
 			break;
+		case MODE_STANDBY:
+			showClock(getClock(CLOCK_NOEDIT));
+			break;
 		}
 
 		/* Save current mode */
 		dispModePrev = dispMode;
+		if (dispMode != MODE_STANDBY)
+			dispModePrevActive = dispMode;
 
 	}
 

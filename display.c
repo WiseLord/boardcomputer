@@ -171,12 +171,10 @@ void ks0066ShowBigString(uint8_t *string, uint8_t pos)
 			ks0066ShowBigChar(12, pos);
 			pos += 2;
 		} else if (ch == ':') {
-			pos--;
-			ks0066ShowBigChar(13, pos);
+			ks0066ShowBigChar(13, --pos);
 			pos += 2;
 		} else if (ch == '`') {
-			pos--;
-			ks0066ShowBigChar(14, pos);
+			ks0066ShowBigChar(14, --pos);
 			pos += 2;
 		}
 	}
