@@ -6,6 +6,9 @@ static volatile uint8_t cmdBuf;
 
 static volatile uint16_t tempTimer;				/* Timer of temperature measuring process */
 static volatile uint16_t dispTimer;				/* Timer of current display mode */
+static volatile uint16_t clockTimer;			/* 1 second timer */
+
+static volatile clock time = {13, 14, 50};
 
 void mTimerInit(void)
 {
@@ -14,7 +17,7 @@ void mTimerInit(void)
 
 	TCCR2 |= (1<<WGM21) | (0<<WGM20);			/* Clear Timer2 on match */
 
-	OCR2 = 250;									/* Set Timer2 period to 1ms */
+	OCR2 = 249;									/* Set Timer2 period to 1ms */
 	TCNT2 = 0;									/* Reset Timer2 value */
 
 	/* Setup buttons as inputs with pull-up resistors */
@@ -28,7 +31,49 @@ void mTimerInit(void)
 	return;
 }
 
-#include "ks0066.h"
+static void incClock()
+{
+	time.hsec++;
+	if (time.hsec >= 100) {
+		time.hsec = 0;
+		time.sec++;
+	}
+	if (time.sec >= 60) {
+		time.sec = 0;
+		time.min++;
+	}
+	if (time.min >= 60) {
+		time.min = 0;
+		time.hour++;
+	}
+	if (time.hour >= 24)
+		time.hour = 0;
+
+	return;
+}
+
+uint8_t *getClock()
+{
+	static uint8_t *clockString = (uint8_t*)"  :  :  ";
+
+	clockString[0] = time.hour / 10 + '0';
+	clockString[1] = time.hour % 10 + '0';
+	clockString[3] = time.min / 10 + '0';
+	clockString[4] = time.min % 10 + '0';
+	clockString[6] = time.sec / 10 + '0';
+	clockString[7] = time.sec % 10 + '0';
+
+	if (time.hsec < 60) {
+		clockString[2] = ':';
+		clockString[5] = ':';
+	} else {
+		clockString[2] = '`';
+		clockString[5] = '`';
+	}
+
+	return clockString;
+}
+
 
 ISR (TIMER2_COMP_vect)
 {
@@ -91,6 +136,11 @@ ISR (TIMER2_COMP_vect)
 
 	if (tempTimer)
 		tempTimer--;
+
+	if (++clockTimer >= 10) {
+		incClock();
+		clockTimer = 0;
+	}
 }
 
 uint16_t getTempTimer()

@@ -35,7 +35,15 @@ enum {
 	CMD_EMPTY = 0xFF
 };
 
+typedef struct {
+	int8_t hour;
+	int8_t min;
+	int8_t sec;
+	int8_t hsec;	/* 1/100 of second */
+} clock;
+
 void mTimerInit(void);
+uint8_t *getClock();
 
 uint16_t getTempTimer();
 void setTempTimer(uint16_t val);

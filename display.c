@@ -9,12 +9,17 @@
 static uint8_t userSybmols = LCD_USER_SYMBOLS_EMPTY;
 
 static const uint8_t bigCharSegm[] PROGMEM = {
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, /* Top bar */
-	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, /* Bottom bar */
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, /* Bottom bar */
+	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, /* Top bar */
 	0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x1F, 0x1F, /* Top and bottom bars */
 
 	0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x03, 0x00, /* Left part of dot */
 	0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x00, /* Right part of dot */
+
+	0x01, 0x01, 0x03, 0x03, 0x07, 0x07, 0x0F, 0x0F, /* Left triangle */
+	0x10, 0x10, 0x18, 0x18, 0x1C, 0x1C, 0x1E, 0x1E, /* Right triangle */
+
+	0x1F, 0x10, 0x10, 0x1E, 0x11, 0x11, 0x1E, 0x00, /* Б */
 };
 
 static const uint8_t bigChar[] PROGMEM = {
@@ -30,8 +35,9 @@ static const uint8_t bigChar[] PROGMEM = {
 	0xFF, 0x02, 0xFF, 0x00, 0x00, 0xFF, /* 9 */
 	0x20, 0x20, 0x20, 0x20, 0x20, 0x20, /*   */
 	0x20, 0x20, 0x20, 0x20, 0x01, 0x01, /* - */
-	0x20, 0x20, 0x20, 0x03, 0x04, 0x20, /* . */
-	0x03, 0x04, 0x20, 0x03, 0x04, 0x20, /* : */
+	0x20, 0x20, 0x80, 0x03, 0x04, 0x80, /* . */
+	0x03, 0x04, 0x80, 0x03, 0x04, 0x80, /* : */
+	0x20, 0x20, 0x80, 0x20, 0x20, 0x80, /* ` */
 };
 
 static const uint8_t tempVoltSymbols[] PROGMEM = {
@@ -46,6 +52,14 @@ static const uint8_t tempVoltSymbols[] PROGMEM = {
 
 static const uint8_t barSymbols[] PROGMEM = {
 	0x00, 0x10, 0x14, 0x15,
+};
+
+static const uint8_t icon5[] PROGMEM = {
+	0x05, 0x06, 0x20, 0x05, 0x06, /* Houses */
+	0xFF, 0xFF, 0x00, 0xFF, 0xFF,
+
+	0x20, 0x05, 0xFF, 0xFF, 0x06, /* Car */
+	0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 };
 
 static void ks0066GenBar(void)
@@ -117,21 +131,22 @@ void ks0066GenSymbols(uint8_t symType, const uint8_t *symArray)
 	return;
 }
 
-void ks0066ShowBigNum(uint16_t val, uint8_t pos)
+void ks0066ShowBigChar(uint16_t val, uint8_t pos)
 {
 	uint8_t i;
+	uint8_t data;
 
 	ks0066GenSymbols(LCD_USER_SYMBOLS_BIGNUM, bigCharSegm);
 
 	ks0066SetXY(pos, 0);
 	for (i = 0; i < 6; i++) {
-		if (i == 3) {
-			ks0066WriteData(0x20);
+		if (i == 3)
 			ks0066SetXY(pos, 1);
-		}
-		ks0066WriteData(pgm_read_byte(&bigChar[val * 6 + i]));
+
+		data = pgm_read_byte(&bigChar[val * 6 + i]);
+		if (data != 0x80)
+			ks0066WriteData(data);
 	}
-	ks0066WriteData(0x20);
 
 	return;
 }
@@ -143,21 +158,25 @@ void ks0066ShowBigString(uint8_t *string, uint8_t pos)
 	while(*string) {
 		ch = *string++;
 		if (ch >= '0' && ch <= '9') {
-			ks0066ShowBigNum(ch - '0', pos);
+			ks0066ShowBigChar(ch - '0', pos);
 			pos += 4;
 		} else if (ch == ' ') {
-			ks0066ShowBigNum(10, pos);
+			ks0066ShowBigChar(10, pos);
 			pos += 4;
 		} else if (ch == '-') {
-			ks0066ShowBigNum(11, pos);
+			ks0066ShowBigChar(11, pos);
 			pos += 4;
 		} else if (ch == '.') {
 			pos--;
-			ks0066ShowBigNum(12, pos);
+			ks0066ShowBigChar(12, pos);
 			pos += 2;
 		} else if (ch == ':') {
 			pos--;
-			ks0066ShowBigNum(13, pos);
+			ks0066ShowBigChar(13, pos);
+			pos += 2;
+		} else if (ch == '`') {
+			pos--;
+			ks0066ShowBigChar(14, pos);
 			pos += 2;
 		}
 	}
@@ -167,9 +186,12 @@ void ks0066ShowBigString(uint8_t *string, uint8_t pos)
 
 void showRPM(uint16_t rpm)
 {
-	uint16_t maxRPM = 4800;
+	uint16_t maxRPM = 7200;
 
-	ks0066SetXY(12, 0);
+	ks0066SetXY(0, 0);
+
+	ks0066WriteString((uint8_t*)"TAXOMETP    ");
+
 	ks0066WriteString(mkNumString(rpm, 4, 0));
 	ks0066ShowBar(rpm, maxRPM);
 
@@ -185,7 +207,7 @@ void showBigRPM(uint16_t rpm)
 	return;
 }
 
-void showTemp(uint8_t sensor, uint8_t pos)
+void showSensorTemp(uint8_t sensor, uint8_t pos)
 {
 	ks0066SetXY(pos, 1);
 	ks0066WriteString(mkNumString(ds18x20GetTemp(sensor), 4, 1));
@@ -194,15 +216,35 @@ void showTemp(uint8_t sensor, uint8_t pos)
 	return;
 }
 
-void showTempAll(uint8_t count)
+void showTemp(uint8_t count)
 {
 	ks0066GenSymbols(LCD_USER_SYMBOLS_TEMPVOLT, tempVoltSymbols);
 
 	ks0066SetXY(0, 0);
-	ks0066WriteString((uint8_t*)" \x08\x01\x02\x03""А    CА\x01""OH ");
+	ks0066WriteString((uint8_t*)" CА\x01""OH    \x08\x01\x02\x03""А ");
 
-	showTemp(0, 0);
-	showTemp(1, 9);
+	showSensorTemp(0, 9);
+	showSensorTemp(1, 0);
+
+	return;
+}
+
+static void showTempIcon(uint8_t icon)
+{
+	uint8_t i;
+	uint8_t data;
+
+	ks0066GenSymbols(LCD_USER_SYMBOLS_BIGNUM, bigCharSegm);
+
+	ks0066SetXY(0, 0);
+	for (i = 0; i < 10; i++) {
+		if (i == 5)
+			ks0066SetXY(0, 1);
+
+		data = pgm_read_byte(&icon5[icon * 10 + i]);
+		if (data != 0x80)
+			ks0066WriteData(data);
+	}
 
 	return;
 }
@@ -213,15 +255,38 @@ void showBigTemp(uint8_t sensor)
 
 	temp = ds18x20GetTemp(sensor);
 
-	ks0066SetXY(0, 0);
-	ks0066ShowBigString(mkNumString(temp, 4, 1), 0);
+	ks0066ShowBigString(mkNumString(temp/10, 3, 0), 5);
+
+	showTempIcon(sensor);
 
 	return;
 }
 
-static void showVoltage(uint8_t adcMux)
+void showBigVoltage(uint8_t sensor)
 {
-	adcSetMux(adcMux);
+	adcSetMux(sensor + 6);
+
+	uint8_t i;
+	uint16_t avgVoltage = 0;
+
+	for (i = 0; i < 8; i++) {
+		avgVoltage += adcGetVoltage();
+	}
+
+	ks0066ShowBigString(mkNumString(avgVoltage >> 5, 3, 1), 4);
+
+	ks0066SetXY(0, sensor);
+	if (sensor == VOLTAGE_BATTERY)
+		ks0066WriteString((uint8_t*)"\x07""AT");
+	else
+		ks0066WriteString((uint8_t*)"\x07""OP");
+
+	return;
+}
+
+static void showVoltage(uint8_t sensor)
+{
+	adcSetMux(sensor + 6);
 
 	uint8_t i;
 	uint16_t avgVoltage = 0;
@@ -236,16 +301,23 @@ static void showVoltage(uint8_t adcMux)
 	return;
 }
 
-void showVoltageAll()
+void showVoltageAll(void)
 {
 	ks0066GenSymbols(LCD_USER_SYMBOLS_TEMPVOLT, tempVoltSymbols);
 
 	ks0066SetXY(0, 0);
 	ks0066WriteString((uint8_t*)"\x04""ATAPE""\x05""   ");
-	showVoltage(ADCMUX_BATTERY);
+	showVoltage(VOLTAGE_BATTERY);
 	ks0066SetXY(0, 1);
 	ks0066WriteString((uint8_t*)"\x04""OPTOBOE  ");
-	showVoltage(ADCMUX_VOLTS);
+	showVoltage(VOLTAGE_BOARD);
+
+	return;
+}
+
+void showBigClock(uint8_t *clkString)
+{
+	ks0066ShowBigString(clkString, 0);
 
 	return;
 }
