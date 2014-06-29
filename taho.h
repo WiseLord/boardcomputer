@@ -10,6 +10,8 @@
 
 #define TAHO				(1<<PD3)
 
+#define RPM_MAX				4800
+
 void setPpt(uint8_t value);
 uint8_t getPpt(void);
 void tahoInit(uint8_t ppt);

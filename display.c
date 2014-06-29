@@ -94,6 +94,33 @@ static void ks0066GenBar(void)
 	return;
 }
 
+static void ks0066GenBigBar(void)
+{
+	uint8_t i;
+	uint8_t sym;
+
+	if (userSybmols != LCD_USER_SYMBOLS_BIG_BAR) {
+		ks0066WriteCommand(KS0066_SET_CGRAM);
+
+		for (i = 0; i < 8 * 4; i++) {
+			sym = i / 8;
+			if (i % 8 == 0)
+				sym = 3;
+			ks0066WriteData(pgm_read_byte(&barSymbols[sym]));
+		}
+		for (i = 0; i < 8 * 4; i++) {
+			sym = i / 8;
+			if (i % 8 == 7)
+				sym = 3;
+			ks0066WriteData(pgm_read_byte(&barSymbols[sym]));
+		}
+
+		userSybmols = LCD_USER_SYMBOLS_BIG_BAR;
+	}
+
+	return;
+}
+
 void ks0066ShowBar(uint16_t value, uint16_t max)
 {
 	uint8_t i;
@@ -111,6 +138,41 @@ void ks0066ShowBar(uint16_t value, uint16_t max)
 				ks0066WriteData(0x00);
 			} else {
 				ks0066WriteData(value % 3);
+			}
+		}
+	}
+}
+
+void ks0066ShowBigBar(uint16_t value, uint16_t max)
+{
+	uint8_t i;
+
+	ks0066GenBigBar();
+
+	value = (uint32_t)value * 48 / max;
+
+	ks0066SetXY(0, 0);
+	for (i = 0; i < 16; i++) {
+		if (value / 3 > i) {
+			ks0066WriteData(0x03);
+		} else {
+			if (value / 3 < i) {
+				ks0066WriteData(0x00);
+			} else {
+				ks0066WriteData(value % 3);
+			}
+		}
+	}
+
+	ks0066SetXY(0, 1);
+	for (i = 0; i < 16; i++) {
+		if (value / 3 > i) {
+			ks0066WriteData(0x07);
+		} else {
+			if (value / 3 < i) {
+				ks0066WriteData(0x04);
+			} else {
+				ks0066WriteData(value % 3 + 4);
 			}
 		}
 	}
@@ -193,14 +255,19 @@ void ks0066ShowBigString(uint8_t *string, uint8_t pos)
 
 void showRPM(uint16_t rpm)
 {
-	uint16_t maxRPM = 7200;
-
 	ks0066SetXY(0, 0);
 
 	ks0066WriteString((uint8_t*)"TAXOMETP    ");
 
 	ks0066WriteString(mkNumString(rpm, 4, 0));
-	ks0066ShowBar(rpm, maxRPM);
+	ks0066ShowBar(rpm, RPM_MAX);
+
+	return;
+}
+
+void showScaleRPM(uint16_t rpm)
+{
+	ks0066ShowBigBar(rpm, RPM_MAX);
 
 	return;
 }

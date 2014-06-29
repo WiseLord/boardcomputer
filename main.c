@@ -113,10 +113,12 @@ int main(void)
 			dispMode = dispModeTemp;
 			break;
 		case CMD_BTN_3:
-			if (dispMode == MODE_EDIT_H || dispMode == MODE_EDIT_M || dispMode == MODE_EDIT_RPM) {
+			if (dispMode == MODE_EDIT_H || dispMode == MODE_EDIT_M) {
 				break;
 			}
 			if (dispMode == MODE_RPM)
+				dispModeRpm = MODE_RPM_SCALE;
+			else if (dispMode == MODE_RPM_SCALE)
 				dispModeRpm = MODE_BIG_RPM;
 			else if (dispMode == MODE_BIG_RPM)
 				dispModeRpm = MODE_RPM;
@@ -126,7 +128,7 @@ int main(void)
 			if (dispMode == MODE_EDIT_H || dispMode == MODE_EDIT_M) {
 				break;
 			}
-			if (dispMode == MODE_RPM || dispMode == MODE_BIG_RPM)
+			if (dispMode == MODE_RPM || dispMode == MODE_RPM_SCALE || dispMode == MODE_BIG_RPM)
 				dispModeRpm = MODE_EDIT_RPM;
 			else if (dispMode == MODE_EDIT_RPM) {
 				dispModeRpm = MODE_RPM;
@@ -201,6 +203,9 @@ int main(void)
 			break;
 		case MODE_RPM:
 			showRPM(rpm);
+			break;
+		case MODE_RPM_SCALE:
+			showScaleRPM(rpm);
 			break;
 		case MODE_BIG_RPM:
 			showBigRPM(rpm);

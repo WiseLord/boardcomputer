@@ -16,6 +16,7 @@ enum {
 	MODE_EDIT_H,
 	MODE_EDIT_M,
 	MODE_RPM,
+	MODE_RPM_SCALE,
 	MODE_BIG_RPM,
 	MODE_EDIT_RPM
 };
@@ -24,6 +25,7 @@ enum {
 enum {
 	LCD_USER_SYMBOLS_EMPTY,
 	LCD_USER_SYMBOLS_BAR,
+	LCD_USER_SYMBOLS_BIG_BAR,
 	LCD_USER_SYMBOLS_BIGNUM,
 	LCD_USER_SYMBOLS_TEMPVOLT
 };
@@ -43,6 +45,7 @@ void ks0066ShowBar(uint16_t value, uint16_t max);
 void ks0066ShowBigString(uint8_t *string, uint8_t pos);
 
 void showRPM(uint16_t rpm);
+void showScaleRPM(uint16_t rpm);
 void showBigRPM(uint16_t rpm);
 void showEditRPM(uint16_t rpm);
 
