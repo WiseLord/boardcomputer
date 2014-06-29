@@ -17,7 +17,7 @@ void setPpt(uint8_t value)
 	if (ppt > 96)
 		ppt = 96;
 
-	ocr1 = 62500 / ppt * 6;
+	ocr1 = 12500 / ppt * 6;
 	OCR1AH = ocr1 >> 8;
 	OCR1AL = ocr1 & 0xFF;
 
@@ -69,5 +69,5 @@ ISR (TIMER1_COMPA_vect)
 
 uint16_t getTaho()
 {
-	return cntBuf * 10;
+	return cntBuf * 50;
 }
