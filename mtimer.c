@@ -116,6 +116,9 @@ uint8_t *getClock(uint8_t clkEdit, uint8_t blink)
 			clockString[2] = '`';
 			clockString[5] = '`';
 		}
+	} else {
+		clockString[2] = ':';
+		clockString[5] = ':';
 	}
 
 	return clockString;
