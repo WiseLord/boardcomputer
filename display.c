@@ -327,7 +327,7 @@ void showTemp(uint8_t count)
 	ks0066GenSymbols(LCD_USER_SYMBOLS_TEMPVOLT, tempVoltSymbols);
 
 	ks0066SetXY(0, 0);
-	ks0066WriteString((uint8_t*)" CА\x01""OH    \x08\x01\x02\x03""А ");
+	ks0066WriteString((uint8_t*)" CA\x01""OH    \x08\x01\x02\x03""A ");
 
 	showSensorTemp(0, 9, 1);
 	showSensorTemp(1, 0, 1);
