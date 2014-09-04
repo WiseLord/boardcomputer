@@ -13,8 +13,10 @@
 #define RPM_MAX				4800
 
 void setPpt(uint8_t value);
+void setAutooff(uint8_t value);
+uint8_t getAutoff(void);
 uint8_t getPpt(void);
-void tahoInit(uint8_t ppt);
+void tahoInit(uint8_t ppt, uint8_t autooff);
 
 uint16_t getTaho();
 

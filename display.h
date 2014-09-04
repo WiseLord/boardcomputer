@@ -22,7 +22,8 @@ enum {
 	MODE_RPM,
 	MODE_RPM_SCALE,
 	MODE_BIG_RPM,
-	MODE_EDIT_RPM
+	MODE_EDIT_RPM,
+	MODE_EDIT_AUTOOFF
 };
 
 /* User generated characters */
@@ -52,6 +53,7 @@ void showRPM(uint16_t rpm);
 void showScaleRPM(uint16_t rpm);
 void showBigRPM(uint16_t rpm);
 void showEditRPM(uint16_t rpm);
+void showEditAutooff(uint16_t rpm);
 
 void showTemp(uint8_t count);
 void showBigTemp(uint8_t sensor);

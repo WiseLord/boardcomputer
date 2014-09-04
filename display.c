@@ -60,6 +60,7 @@ static const uint8_t rpmChars[] PROGMEM = {
 	0x11, 0x11, 0x13, 0x15, 0x19, 0x11, 0x11, 0x00, /* И */
 	0x1F, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x00, /* П */
 	0x1F, 0x10, 0x10, 0x1E, 0x11, 0x11, 0x1E, 0x00, /* Б */
+	0x07, 0x09, 0x09, 0x09, 0x09, 0x09, 0x11, 0x00, /* Л */
 };
 
 static const uint8_t icon5[] PROGMEM = {
@@ -293,6 +294,21 @@ void showEditRPM(uint16_t rpm)
 	ks0066SetXY(0, 1);
 	ks0066WriteString((uint8_t*)"\x04M\x05/O\x06OPOT   ");
 	ks0066WriteString(mkNumString(getPpt(), 3, 0));
+
+	return;
+}
+
+void showEditAutooff(uint16_t rpm)
+{
+	ks0066GenBar();
+
+	ks0066SetXY(0, 0);
+	ks0066WriteString((uint8_t*)"TAXOMETP   ");
+	ks0066WriteString(mkNumString(rpm, 5, 0));
+
+	ks0066SetXY(0, 1);
+	ks0066WriteString((uint8_t*)"ABTOOTK\x07.    ");
+	ks0066WriteString(mkNumString(getAutoff(), 3, 0));
 
 	return;
 }

@@ -6,6 +6,7 @@ static volatile uint16_t cnt;
 static volatile uint16_t cntBuf;
 
 static uint8_t ppt;									/* Pulses per turn from tahometer */
+static uint8_t autooff;								/* Display autooff flag */
 
 void setPpt(uint8_t value)
 {
@@ -24,12 +25,22 @@ void setPpt(uint8_t value)
 	return;
 }
 
+void setAutooff(uint8_t value)
+{
+	autooff = value;
+}
+
 uint8_t getPpt(void)
 {
 	return ppt;
 }
 
-void tahoInit(uint8_t ppt)
+uint8_t getAutoff(void)
+{
+	return autooff;
+}
+
+void tahoInit(uint8_t ppt, uint8_t autooff)
 {
 	/* Set INT1 pin as input with pull-up */
 	TAHO_DDR &= ~TAHO;
@@ -45,6 +56,9 @@ void tahoInit(uint8_t ppt)
 
 	/* Select measurement time to have (PPM / 10) pulses */
 	setPpt(ppt);
+
+	/* Set display autooff flag*/
+	setAutooff(autooff);
 
 	/* Enable Timer1 A compare match interrupt */
 	TIMSK |= (1<<OCIE1A);

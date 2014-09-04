@@ -10,14 +10,15 @@
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 
-#define EEPROM_PPT	((void*)0x01F0)
+#define EEPROM_PPT			((void*)0x01F0)
+#define EEPROM_AUTOOFF		((void*)0x01F1)
 
 void hwInit(void)
 {
 	ks0066Init();
 	adcInit();
 	mTimerInit();
-	tahoInit(eeprom_read_byte(EEPROM_PPT));
+	tahoInit(eeprom_read_byte(EEPROM_PPT), eeprom_read_byte(EEPROM_AUTOOFF));
 
 	sei();
 
@@ -75,8 +76,13 @@ int main(void)
 				cmd = CMD_EMPTY;
 		}
 
-		/* Turn on if board voltage has changed from <0.5V to >10V */
-		if (dispMode == MODE_STANDBY && brdVoltPrev < 5 && brdVolt > 100) {
+		/* Stay active when there is a board voltage when autooff function disabled */
+		if (dispMode != MODE_STANDBY && brdVolt > 50 && !getAutoff()) {
+			setStbyTimer(DISP_TIMEOUT);
+		}
+
+		/* Turn on if board voltage has changed from <5V to >5V */
+		if (dispMode == MODE_STANDBY && brdVoltPrev < 50 && brdVolt > 50) {
 			setStbyTimer(IGNITION_TIMEOUT);
 			dispMode = dispModePrevActive;
 			exitStby();
@@ -100,6 +106,10 @@ int main(void)
 				setPpt(getPpt() - 1);
 				break;
 			}
+			if (dispMode == MODE_EDIT_AUTOOFF) {
+				setAutooff(!getAutoff());
+				break;
+			}
 			if (dispMode == MODE_EDIT_H) {
 				clockDecHour();
 				break;
@@ -120,6 +130,10 @@ int main(void)
 		case CMD_BTN_2:
 			if (dispMode == MODE_EDIT_RPM) {
 				setPpt(getPpt() + 1);
+				break;
+			}
+			if (dispMode == MODE_EDIT_AUTOOFF) {
+				setAutooff(!getAutoff());
 				break;
 			}
 			if (dispMode == MODE_EDIT_H) {
@@ -148,6 +162,10 @@ int main(void)
 				dispModeRpm = MODE_BIG_RPM;
 			else if (dispMode == MODE_BIG_RPM)
 				dispModeRpm = MODE_RPM;
+			else if (dispMode == MODE_EDIT_RPM)
+				dispModeRpm = MODE_EDIT_AUTOOFF;
+			else if (dispMode == MODE_EDIT_AUTOOFF)
+				dispModeRpm = MODE_EDIT_RPM;
 			dispMode = dispModeRpm;
 			break;
 		case CMD_BTN_3_LONG:
@@ -156,9 +174,10 @@ int main(void)
 			}
 			if (dispMode == MODE_RPM || dispMode == MODE_RPM_SCALE || dispMode == MODE_BIG_RPM)
 				dispModeRpm = MODE_EDIT_RPM;
-			else if (dispMode == MODE_EDIT_RPM) {
+			else if (dispMode == MODE_EDIT_RPM || dispMode == MODE_EDIT_AUTOOFF) {
 				dispModeRpm = MODE_RPM;
 				eeprom_update_byte(EEPROM_PPT, getPpt());
+				eeprom_update_byte(EEPROM_AUTOOFF, getAutoff());
 			}
 			dispMode = dispModeRpm;
 			break;
@@ -244,6 +263,9 @@ int main(void)
 			break;
 		case MODE_EDIT_RPM:
 			showEditRPM(rpm);
+			break;
+		case MODE_EDIT_AUTOOFF:
+			showEditAutooff(rpm);
 			break;
 		case MODE_STANDBY:
 			showBigClock(getClock(CLOCK_NOEDIT, BLINK_CLOCK_ON));

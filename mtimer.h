@@ -21,7 +21,7 @@
 #define LONG_PRESS		500
 
 /* Display timeout when generator is off */
-#define IGNITION_TIMEOUT 60000U
+#define IGNITION_TIMEOUT 40000U
 #define DISP_TIMEOUT 20000U
 
 enum {
