@@ -13,11 +13,11 @@ static volatile clock time = {12, 00, 00};
 void mTimerInit(void)
 {
 	TIMSK |= (1<<OCIE2);						/* Enable Timer2 compare match interrupt */
-	TCCR2 |= (1<<CS22) | (0<<CS21) | (0<<CS20);	/* Set timer prescaller to 64 (250kHz) */
+	TCCR2 |= (1<<CS22) | (0<<CS21) | (0<<CS20);	/* Set timer prescaller to 64 (187.5kHz) */
 
 	TCCR2 |= (1<<WGM21) | (0<<WGM20);			/* Clear Timer2 on match */
 
-	OCR2 = 249;									/* Set Timer2 period to 1ms */
+	OCR2 = 187;									/* Set Timer2 period to 1ms */
 	TCNT2 = 0;									/* Reset Timer2 value */
 
 	/* Setup buttons as inputs with pull-up resistors */
