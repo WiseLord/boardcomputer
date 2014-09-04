@@ -9,6 +9,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
+#include <avr/wdt.h>
 
 #define EEPROM_PPT			((void*)0x01F0)
 #define EEPROM_AUTOOFF		((void*)0x01F1)
@@ -19,6 +20,7 @@ void hwInit(void)
 	adcInit();
 	mTimerInit();
 	tahoInit(eeprom_read_byte(EEPROM_PPT), eeprom_read_byte(EEPROM_AUTOOFF));
+	wdt_enable(WDTO_2S);
 
 	sei();
 
@@ -60,6 +62,8 @@ int main(void)
 	uint8_t dispModePrevActive = dispMode;
 
 	while(1) {
+		wdt_disable();
+
 		count = ds18x20Process();
 		cmd = getBtnCmd();
 		rpm = getTaho();
