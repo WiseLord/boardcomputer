@@ -87,5 +87,12 @@ ISR (TIMER1_COMPA_vect)
 
 uint16_t getTaho()
 {
-	return (20000 / cntBuf) * 10;
+	uint32_t ret = 0;
+
+	if (cntBuf)
+		ret = (20000UL / cntBuf) * 10;
+	if (ret > 60000)
+		ret = 0;
+
+	return (uint16_t)ret;
 }
