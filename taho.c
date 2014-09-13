@@ -4,6 +4,7 @@
 
 static volatile uint16_t cnt;
 static volatile uint16_t cntBuf;
+static volatile uint8_t intCnt;
 
 static uint8_t ppt;									/* Pulses per turn from tahometer */
 static uint8_t autooff;								/* Display autooff flag */
@@ -13,12 +14,12 @@ void setPpt(uint8_t value)
 	uint16_t ocr1;
 
 	ppt = value;
-	if (ppt < 6)
-		ppt = 6;
-	if (ppt > 96)
-		ppt = 96;
+	if (ppt < 1)
+		ppt = 1;
+	if (ppt > 250)
+		ppt = 250;
 
-	ocr1 = 12500 / ppt * 6;
+	ocr1 = 30000 / (ppt + 20);
 	OCR1AH = ocr1 >> 8;
 	OCR1AL = ocr1 & 0xFF;
 
@@ -51,7 +52,7 @@ void tahoInit(uint8_t ppt, uint8_t autooff)
 
 	/* Init Timer 1*/
 	TCCR1A = 0;
-	TCCR1B = (1<<CS12) | (0<<CS11) | (0<<CS10);		/* Divider = 256 => 62500 Hz*/
+	TCCR1B = (0<<CS12) | (1<<CS11) | (0<<CS10);		/* Divider = 8 => 1500 kHz*/
 	TCCR1B |= (1<<WGM12);							/* Clear Timer1 on match */
 
 	/* Select measurement time to have (PPM / 10) pulses */
@@ -68,20 +69,23 @@ void tahoInit(uint8_t ppt, uint8_t autooff)
 
 ISR(INT1_vect)
 {
-	cnt++;
-
+	intCnt++;
+	if (intCnt >= 5) {
+		intCnt = 0;
+		cntBuf = cnt;
+		cnt = 0;
+	}
 	return;
 }
 
 ISR (TIMER1_COMPA_vect)
 {
-	cntBuf = cnt;
-	cnt = 0;
+	cnt++;
 
 	return;
 }
 
 uint16_t getTaho()
 {
-	return cntBuf * 50;
+	return (20000 / cntBuf) * 10;
 }

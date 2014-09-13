@@ -281,6 +281,7 @@ int main(void)
 		if (dispMode != MODE_STANDBY)
 			dispModePrevActive = dispMode;
 
+		_delay_ms(200);
 	}
 
 	return 0;
