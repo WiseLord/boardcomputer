@@ -1,15 +1,13 @@
-TARG=ks0066lib
+TARG=boardcomputer
 
 SRCS = main.c ks0066.c ds18x20.c mtimer.c adcvolt.c display.c taho.c
 
 MCU = atmega8
 F_CPU = 12000000L
 
-CS = -fexec-charset=ks0066-ru
-
 OPTIMIZE = -Os -mcall-prologues -fshort-enums
 DEBUG = -g -Wall -Werror
-CFLAGS =  $(DEBUG) -lm $(OPTIMIZE) $(CS) -mmcu=$(MCU) -DF_CPU=$(F_CPU)
+CFLAGS =  $(DEBUG) -lm $(OPTIMIZE) -mmcu=$(MCU) -DF_CPU=$(F_CPU)
 LDFLAGS =  $(DEBUG) -mmcu=$(MCU)
 
 CC = avr-gcc
