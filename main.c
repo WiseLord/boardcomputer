@@ -280,6 +280,10 @@ int main(void)
 		dispModePrev = dispMode;
 		if (dispMode != MODE_STANDBY)
 			dispModePrevActive = dispMode;
+		if (dispModePrevActive == MODE_EDIT_H || dispModePrevActive == MODE_EDIT_M)
+			dispModePrevActive = MODE_CLOCK;
+		if (dispModePrevActive == MODE_EDIT_RPM)
+			dispModePrevActive = MODE_RPM;
 
 		_delay_ms(200);
 	}

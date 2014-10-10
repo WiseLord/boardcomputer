@@ -4,7 +4,6 @@
 
 static volatile uint16_t cnt;
 static volatile uint16_t cntBuf;
-static volatile uint8_t intCnt;
 
 static uint8_t ppt;									/* Pulses per turn from tahometer */
 static uint8_t autooff;								/* Display autooff flag */
@@ -69,18 +68,17 @@ void tahoInit(uint8_t ppt, uint8_t autooff)
 
 ISR(INT1_vect)
 {
-	intCnt++;
-	if (intCnt >= 5) {
-		intCnt = 0;
-		cntBuf = cnt;
-		cnt = 0;
-	}
+	cntBuf = cnt;
+	cnt = 0;
+
 	return;
 }
 
 ISR (TIMER1_COMPA_vect)
 {
 	cnt++;
+	if (cnt > 200)
+		cntBuf = 0;
 
 	return;
 }
@@ -90,7 +88,9 @@ uint16_t getTaho()
 	uint32_t ret = 0;
 
 	if (cntBuf)
-		ret = (20000UL / cntBuf) * 10;
+		ret = (4000UL / cntBuf) * 10;
+	else
+		ret = 0;
 	if (ret > 60000)
 		ret = 0;
 
