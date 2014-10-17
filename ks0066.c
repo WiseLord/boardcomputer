@@ -1,87 +1,55 @@
 #include "ks0066.h"
 
+#include <avr/pgmspace.h>
+#include <avr/eeprom.h>
 #include <util/delay.h>
 
 #define swap(x) (__builtin_avr_swap(x))		/*  Swaps nibbles in byte */
 
 static void ks0066writeStrob()
 {
-	_delay_us(0.05);
-	KS0066_CTRL_PORT |= KS0066_E;
-	_delay_us(0.25);
-	KS0066_CTRL_PORT &= ~KS0066_E;
+	_delay_us(0.04);
+	PORT(KS0066_E) |= KS0066_E_LINE;
+	_delay_us(0.23);
+	PORT(KS0066_E) &= ~KS0066_E_LINE;
 
 	return;
 }
 
-static uint8_t ks0066readStrob()
+static void ks0066SetHighNibble(uint8_t data)
 {
-	uint8_t pin;
+	if (data & (1<<7)) PORT(KS0066_D7) |= KS0066_D7_LINE; else PORT(KS0066_D7) &= ~KS0066_D7_LINE;
+	if (data & (1<<6)) PORT(KS0066_D6) |= KS0066_D6_LINE; else PORT(KS0066_D6) &= ~KS0066_D6_LINE;
+	if (data & (1<<5)) PORT(KS0066_D5) |= KS0066_D5_LINE; else PORT(KS0066_D5) &= ~KS0066_D5_LINE;
+	if (data & (1<<4)) PORT(KS0066_D4) |= KS0066_D4_LINE; else PORT(KS0066_D4) &= ~KS0066_D4_LINE;
 
-	_delay_us(0.05);
-	KS0066_CTRL_PORT |= KS0066_E;
-	_delay_us(0.25);
-	pin = swap(KS0066_DATA_PIN & 0x0F);
-	KS0066_CTRL_PORT &= ~KS0066_E;
-	_delay_us(0.25);
-	KS0066_CTRL_PORT |= KS0066_E;
-	_delay_us(0.25);
-	pin |= (KS0066_DATA_PIN & 0x0F);
-	KS0066_CTRL_PORT &= ~KS0066_E;
-
-	return pin;
+	return;
 }
 
-static void ks0066waitWhileBusy()
+static void ks0066WritePort(uint8_t data)
 {
-	uint8_t i = 0;
+	_delay_us(100);
 
-	KS0066_CTRL_PORT &= ~KS0066_RS;
-	KS0066_CTRL_PORT |= KS0066_RW;
-
-	KS0066_DATA_DDR &= 0xF0;
-
-	while (ks0066readStrob() & KS0066_STA_BUSY) {
-		if (i++ > 200)	/* Avoid endless loop */
-			return;
-	}
+	ks0066SetHighNibble(data);
+	ks0066writeStrob();
+	ks0066SetHighNibble(swap(data));
+	ks0066writeStrob();
 
 	return;
 }
 
 void ks0066WriteCommand(uint8_t command)
 {
-	ks0066waitWhileBusy();
-
-	KS0066_CTRL_PORT &= ~(KS0066_RS | KS0066_RW);
-
-	KS0066_DATA_DDR |= 0x0F;
-	KS0066_DATA_PORT &= 0xF0;
-	KS0066_DATA_PORT |= (swap(command) & 0x0F);
-	ks0066writeStrob();
-	KS0066_DATA_PORT &= 0xF0;
-	KS0066_DATA_PORT |= (command & 0x0F);
-
-	ks0066writeStrob();
+	PORT(KS0066_RS) &= ~KS0066_RS_LINE;
+	ks0066WritePort(command);
 
 	return;
 }
 
 void ks0066WriteData(uint8_t data)
 {
-	ks0066waitWhileBusy();
-
-	KS0066_CTRL_PORT &= ~KS0066_RW;
-	KS0066_CTRL_PORT |= KS0066_RS;
-
-	KS0066_DATA_DDR |= 0x0F;
-	KS0066_DATA_PORT &= 0xF0;
-	KS0066_DATA_PORT |= (swap(data) & 0x0F);
-	ks0066writeStrob();
-	KS0066_DATA_PORT &= 0xF0;
-	KS0066_DATA_PORT |= (data & 0x0F);
-
-	ks0066writeStrob();
+	PORT(KS0066_RS) |= KS0066_RS_LINE;
+	ks0066WritePort(data);
 
 	return;
 }
@@ -96,14 +64,17 @@ void ks0066Clear(void)
 
 void ks0066Init(void)
 {
-	KS0066_DATA_DDR |= 0x0F;
-	KS0066_CTRL_DDR |= KS0066_RS | KS0066_RW | KS0066_E;
-	KS0066_BCKL_DDR |= KS0066_BCKL;
+	DDR(KS0066_D7) |= KS0066_D7_LINE;
+	DDR(KS0066_D6) |= KS0066_D6_LINE;
+	DDR(KS0066_D5) |= KS0066_D5_LINE;
+	DDR(KS0066_D4) |= KS0066_D4_LINE;
+	DDR(KS0066_RS) |= KS0066_RS_LINE;
+	DDR(KS0066_RW) |= KS0066_RW_LINE;
+	DDR(KS0066_E) |= KS0066_E_LINE;
 
-	KS0066_DATA_PORT |= swap(KS0066_INIT_DATA);
-	KS0066_CTRL_PORT &= ~(KS0066_RS | KS0066_RW);
-	KS0066_BCKL_PORT |= KS0066_BCKL;
-
+	ks0066SetHighNibble(KS0066_INIT_DATA);
+	PORT(KS0066_RS) &= ~KS0066_RS_LINE;
+	PORT(KS0066_RW) &= ~KS0066_RW_LINE;
 	_delay_ms(20);
 	ks0066writeStrob();
 	_delay_ms(5);
@@ -113,11 +84,9 @@ void ks0066Init(void)
 
 	ks0066WriteCommand(swap(KS0066_FUNCTION | KS0066_4BIT));
 	ks0066WriteCommand(KS0066_FUNCTION | KS0066_4BIT | KS0066_2LINES);
-	ks0066WriteCommand(KS0066_SET_MODE | KS0066_INC_ADDR);
-
-	ks0066WriteCommand(KS0066_CLEAR);
-	_delay_ms(2);
 	ks0066WriteCommand(KS0066_DISPLAY | KS0066_DISPAY_ON);
+	ks0066Clear();
+	ks0066WriteCommand(KS0066_SET_MODE | KS0066_INC_ADDR);
 
 	return;
 }
@@ -135,37 +104,4 @@ void ks0066WriteString(uint8_t *string)
 		ks0066WriteData(*string++);
 
 	return;
-}
-
-uint8_t *mkNumString(int16_t value, uint8_t width, uint8_t prec)
-{
-	static uint8_t strBuf[6];
-
-	uint8_t sign = ' ';
-	int8_t pos;
-
-	if (value < 0) {
-		sign = '-';
-		value = -value;
-	}
-
-	/* Clear buffer and go to it's tail */
-	for (pos = 0; pos < width + prec; pos++)
-		strBuf[pos] = ' ';
-	strBuf[width + prec] = '\0';
-	pos = width + prec - 1;
-
-	/* Fill buffer from right to left */
-	while (value > 0 || pos > width - 2) {
-		if (prec && (width - pos - 1 == 0))
-			strBuf[pos--] = '.';
-		strBuf[pos] = value % 10 + 0x30;
-		pos--;
-		value /= 10;
-	}
-
-	if (pos >= 0)
-		strBuf[pos] = sign;
-
-	return strBuf;
 }

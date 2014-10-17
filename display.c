@@ -71,6 +71,39 @@ static const uint8_t icon5[] PROGMEM = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 };
 
+static uint8_t *mkNumString(int16_t value, uint8_t width, uint8_t prec)
+{
+	static uint8_t strBuf[6];
+
+	uint8_t sign = ' ';
+	int8_t pos;
+
+	if (value < 0) {
+		sign = '-';
+		value = -value;
+	}
+
+	/* Clear buffer and go to it's tail */
+	for (pos = 0; pos < width + prec; pos++)
+		strBuf[pos] = ' ';
+	strBuf[width + prec] = '\0';
+	pos = width + prec - 1;
+
+	/* Fill buffer from right to left */
+	while (value > 0 || pos > width - 2) {
+		if (prec && (width - pos - 1 == 0))
+			strBuf[pos--] = '.';
+		strBuf[pos] = value % 10 + 0x30;
+		pos--;
+		value /= 10;
+	}
+
+	if (pos >= 0)
+		strBuf[pos] = sign;
+
+	return strBuf;
+}
+
 static void ks0066GenBar(void)
 {
 	uint8_t i;

@@ -1,26 +1,8 @@
 #ifndef KS0066_H
 #define KS0066_H
 
-#include <avr/io.h>
-
-/* Data port */
-#define KS0066_DATA_PORT			PORTB
-#define KS0066_DATA_DDR				DDRB
-#define KS0066_DATA_PIN				PINB
-
-/* Control port */
-#define KS0066_CTRL_PORT			PORTD
-#define KS0066_CTRL_DDR				DDRD
-
-#define KS0066_E					(1<<PD7)
-#define KS0066_RW					(1<<PD6)
-#define KS0066_RS					(1<<PD5)
-
-/* Backlight port */
-#define KS0066_BCKL_PORT			PORTD
-#define KS0066_BCKL_DDR				DDRD
-
-#define KS0066_BCKL					(1<<PD4)
+#include <inttypes.h>
+#include "pins.h"
 
 #define KS0066_INIT_DATA			0x30
 
@@ -65,6 +47,5 @@ void ks0066Init(void);
 
 void ks0066SetXY(uint8_t x, uint8_t y);
 void ks0066WriteString(uint8_t *string);
-uint8_t *mkNumString(int16_t value, uint8_t width, uint8_t prec);
 
 #endif /* KS0066_H */

@@ -22,6 +22,9 @@ void hwInit(void)
 	tahoInit(eeprom_read_byte(EEPROM_PPT), eeprom_read_byte(EEPROM_AUTOOFF));
 	wdt_enable(WDTO_2S);
 
+	DDR(BCKL) |= BCKL_LINE;
+	PORT(BCKL) |= BCKL_LINE;
+
 	sei();
 
 	return;
@@ -29,14 +32,14 @@ void hwInit(void)
 
 void goStby(void)
 {
-	KS0066_BCKL_PORT &= ~KS0066_BCKL;
+	PORT(BCKL) &= ~BCKL_LINE;
 
 	return;
 }
 
 void exitStby(void)
 {
-	KS0066_BCKL_PORT |= KS0066_BCKL;
+	PORT(BCKL) |= BCKL_LINE;
 
 	return;
 }
