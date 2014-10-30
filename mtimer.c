@@ -97,7 +97,7 @@ uint8_t *getClock(uint8_t clkEdit, uint8_t blink)
 	clockString[6] = time.sec / 10 + '0';
 	clockString[7] = time.sec % 10 + '0';
 
-	if (time.tsec == 0 || time.tsec == 5) {
+	if (time.tsec <= 1 || (time.tsec >= 5 && time.tsec <= 6)) {
 		if (clkEdit == CLOCK_EDIT_H) {
 			clockString[0] = ' ';
 			clockString[1] = ' ';

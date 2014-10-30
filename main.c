@@ -288,7 +288,6 @@ int main(void)
 		if (dispModePrevActive == MODE_EDIT_RPM)
 			dispModePrevActive = MODE_RPM;
 
-		_delay_ms(200);
 	}
 
 	return 0;
