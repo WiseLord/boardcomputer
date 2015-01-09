@@ -39,4 +39,4 @@ flash: $(TARG)
 	$(AVRDUDE) $(AD_CMDLINE) -V -B 1.1 -U flash:w:$(TARG).hex:i
 
 fuse:
-	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xff:m -U hfuse:w:0xd1:m
+	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xFF:m -U hfuse:w:0xC1:m
