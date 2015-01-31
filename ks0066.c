@@ -72,7 +72,7 @@ void ks0066Init(void)
 	DDR(KS0066_RW) |= KS0066_RW_LINE;
 	DDR(KS0066_E) |= KS0066_E_LINE;
 
-	ks0066SetHighNibble(KS0066_INIT_DATA);
+	ks0066SetHighNibble(KS0066_FUNCTION | KS0066_8BIT);
 	PORT(KS0066_RS) &= ~KS0066_RS_LINE;
 	PORT(KS0066_RW) &= ~KS0066_RW_LINE;
 	_delay_ms(20);
@@ -82,7 +82,7 @@ void ks0066Init(void)
 	_delay_us(120);
 	ks0066writeStrob();
 
-	ks0066WriteCommand(swap(KS0066_FUNCTION | KS0066_4BIT));
+	ks0066WriteCommand(KS0066_FUNCTION | KS0066_4BIT);
 	ks0066WriteCommand(KS0066_FUNCTION | KS0066_4BIT | KS0066_2LINES);
 	ks0066WriteCommand(KS0066_DISPLAY | KS0066_DISPAY_ON);
 	ks0066Clear();

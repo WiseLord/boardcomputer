@@ -4,8 +4,6 @@
 #include <inttypes.h>
 #include "pins.h"
 
-#define KS0066_INIT_DATA			0x30
-
 #define KS0066_CLEAR				0x01
 #define KS0066_HOME					0x02
 
