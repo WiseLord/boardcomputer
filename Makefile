@@ -6,7 +6,8 @@ MCU      = atmega8
 F_CPU    = 12000000
 
 # Source files
-SRCS     = $(wildcard *.c)
+DISP_SRC = display/ks0066.c
+SRCS     = $(wildcard *.c) $(DISP_SRC)
 
 # Build directory
 BUILDDIR = build

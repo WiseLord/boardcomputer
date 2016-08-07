@@ -1,6 +1,6 @@
 #include "display.h"
 
-#include "ks0066.h"
+#include "display/ks0066.h"
 #include "ds18x20.h"
 #include "adcvolt.h"
 #include "taho.h"
@@ -71,9 +71,9 @@ static const uint8_t icon5[] PROGMEM = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 };
 
-static uint8_t *mkNumString(int16_t value, uint8_t width, uint8_t prec)
+static char *mkNumString(int16_t value, uint8_t width, uint8_t prec)
 {
-	static uint8_t strBuf[6];
+	static char strBuf[6];
 
 	uint8_t sign = ' ';
 	int8_t pos;
@@ -257,7 +257,7 @@ void ks0066ShowBigChar(uint16_t val, uint8_t pos)
 	return;
 }
 
-void ks0066ShowBigString(uint8_t *string, uint8_t pos)
+void ks0066ShowBigString(char *string, uint8_t pos)
 {
 	uint8_t ch;
 
@@ -292,7 +292,7 @@ void showRPM(uint16_t rpm)
 {
 	ks0066SetXY(0, 0);
 
-	ks0066WriteString((uint8_t*)"TAXOMETP    ");
+	ks0066WriteString("TAXOMETP    ");
 
 	ks0066WriteString(mkNumString(rpm, 4, 0));
 	ks0066ShowBar(rpm, RPM_MAX);
@@ -321,11 +321,11 @@ void showEditRPM(uint16_t rpm)
 	ks0066GenBar();
 
 	ks0066SetXY(0, 0);
-	ks0066WriteString((uint8_t*)"TAXOMETP   ");
+	ks0066WriteString("TAXOMETP   ");
 	ks0066WriteString(mkNumString(rpm, 5, 0));
 
 	ks0066SetXY(0, 1);
-	ks0066WriteString((uint8_t*)"HACTPO\x04KA    ");
+	ks0066WriteString("HACTPO\x04KA    ");
 	ks0066WriteString(mkNumString(getPpt(), 3, 0));
 
 	return;
@@ -336,11 +336,11 @@ void showEditAutooff(uint16_t rpm)
 	ks0066GenBar();
 
 	ks0066SetXY(0, 0);
-	ks0066WriteString((uint8_t*)"TAXOMETP   ");
+	ks0066WriteString("TAXOMETP   ");
 	ks0066WriteString(mkNumString(rpm, 5, 0));
 
 	ks0066SetXY(0, 1);
-	ks0066WriteString((uint8_t*)"ABTOOTK\x07.    ");
+	ks0066WriteString("ABTOOTK\x07.    ");
 	ks0066WriteString(mkNumString(getAutoff(), 3, 0));
 
 	return;
@@ -350,7 +350,7 @@ static void showSensorTemp(uint8_t sensor, uint8_t x, uint8_t y)
 {
 	ks0066SetXY(x, y);
 	ks0066WriteString(mkNumString(ds18x20GetTemp(sensor), 4, 1));
-	ks0066WriteString((uint8_t*)"\x06""C  ");
+	ks0066WriteString("\x06""C  ");
 
 	return;
 }
@@ -360,7 +360,7 @@ void showTemp(uint8_t count)
 	ks0066GenSymbols(LCD_USER_SYMBOLS_TEMPVOLT, tempVoltSymbols);
 
 	ks0066SetXY(0, 0);
-	ks0066WriteString((uint8_t*)" CA\x01""OH    \x08\x01\x02\x03""A ");
+	ks0066WriteString(" CA\x01""OH    \x08\x01\x02\x03""A ");
 
 	showSensorTemp(0, 9, 1);
 	showSensorTemp(1, 0, 1);
@@ -418,9 +418,9 @@ void showBigVoltage(uint8_t sensor)
 
 	ks0066SetXY(0, sensor);
 	if (sensor == VOLTAGE_BATTERY)
-		ks0066WriteString((uint8_t*)"\x07""AT");
+		ks0066WriteString("\x07""AT");
 	else
-		ks0066WriteString((uint8_t*)"\x07""OP");
+		ks0066WriteString("\x07""OP");
 
 	return;
 }
@@ -428,7 +428,7 @@ void showBigVoltage(uint8_t sensor)
 static void showVoltage(uint8_t sensor)
 {
 	ks0066WriteString(mkNumString(getAvgVoltage(sensor), 3, 1));
-	ks0066WriteString((uint8_t*)" B");
+	ks0066WriteString(" B");
 
 	return;
 }
@@ -438,23 +438,23 @@ void showVoltageAll(void)
 	ks0066GenSymbols(LCD_USER_SYMBOLS_TEMPVOLT, tempVoltSymbols);
 
 	ks0066SetXY(0, 0);
-	ks0066WriteString((uint8_t*)"\x04""ATAPE""\x05""   ");
+	ks0066WriteString("\x04""ATAPE""\x05""   ");
 	showVoltage(VOLTAGE_BATTERY);
 	ks0066SetXY(0, 1);
-	ks0066WriteString((uint8_t*)"\x04""OPTOBOE  ");
+	ks0066WriteString("\x04""OPTOBOE  ");
 	showVoltage(VOLTAGE_BOARD);
 
 	return;
 }
 
-void showBigClock(uint8_t *clkString)
+void showBigClock(char *clkString)
 {
 	ks0066ShowBigString(clkString, 0);
 
 	return;
 }
 
-void showClock(uint8_t *clkString)
+void showClock(char *clkString)
 {
 	ks0066GenSymbols(LCD_USER_SYMBOLS_TEMPVOLT, tempVoltSymbols);
 
@@ -462,7 +462,7 @@ void showClock(uint8_t *clkString)
 	ks0066WriteString(clkString);
 
 	ks0066SetXY(0, 1);
-	ks0066WriteString((uint8_t*)"\x07 ");
+	ks0066WriteString("\x07 ");
 	showVoltage(VOLTAGE_BATTERY);
 
 	showSensorTemp(0, 9, 1);

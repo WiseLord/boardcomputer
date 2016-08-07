@@ -86,9 +86,9 @@ static void incClock()
 	return;
 }
 
-uint8_t *getClock(uint8_t clkEdit, uint8_t blink)
+char *getClock(uint8_t clkEdit, uint8_t blink)
 {
-	static uint8_t *clockString = (uint8_t*)"  :  :  ";
+	static char *clockString = "  :  :  ";
 
 	clockString[0] = time.hour / 10 + '0';
 	clockString[1] = time.hour % 10 + '0';

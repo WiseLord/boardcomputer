@@ -47,7 +47,7 @@ enum {
 
 void ks0066ShowBar(uint16_t value, uint16_t max);
 
-void ks0066ShowBigString(uint8_t *string, uint8_t pos);
+void ks0066ShowBigString(char *string, uint8_t pos);
 
 void showRPM(uint16_t rpm);
 void showScaleRPM(uint16_t rpm);
@@ -62,7 +62,7 @@ uint8_t getAvgVoltage(uint8_t sensor);
 void showVoltageAll(void);
 void showBigVoltage(uint8_t sensor);
 
-void showBigClock(uint8_t *clkString);
-void showClock(uint8_t *clkString);
+void showBigClock(char *clkString);
+void showClock(char *clkString);
 
 #endif /* DISPLAY_H */

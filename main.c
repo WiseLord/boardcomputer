@@ -1,15 +1,14 @@
-#include "ks0066.h"
+#include <avr/interrupt.h>
+#include <avr/eeprom.h>
+#include <avr/wdt.h>
+
 #include "ds18x20.h"
+#include "pins.h"
 #include "mtimer.h"
 #include "adcvolt.h"
 #include "display.h"
 #include "taho.h"
-
-#include <util/delay.h>
-#include <avr/interrupt.h>
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
-#include <avr/wdt.h>
+#include "display/ks0066.h"
 
 #define EEPROM_PPT			((void*)0x01F0)
 #define EEPROM_AUTOOFF		((void*)0x01F1)
