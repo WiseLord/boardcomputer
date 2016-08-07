@@ -1,42 +1,66 @@
-TARG=boardcomputer
+# Output file name
+TARG     = boardcomputer
 
-SRCS = main.c ks0066.c ds18x20.c mtimer.c adcvolt.c display.c taho.c
+# MCU name and frequency
+MCU      = atmega8
+F_CPU    = 12000000
 
-MCU = atmega8
-F_CPU = 12000000L
+# Source files
+SRCS     = $(wildcard *.c)
 
-OPTIMIZE = -Os -mcall-prologues -fshort-enums
-DEBUG = -g -Wall -Werror
-CFLAGS =  $(DEBUG) -lm $(OPTIMIZE) -mmcu=$(MCU) -DF_CPU=$(F_CPU)
-LDFLAGS =  $(DEBUG) -mmcu=$(MCU)
+# Build directory
+BUILDDIR = build
 
-CC = avr-gcc
-OBJCOPY = avr-objcopy
+# Compiler options
+OPTIMIZE = -Os -mcall-prologues -fshort-enums -ffunction-sections -fdata-sections
+DEBUG    = -g -Wall -Werror
+DEPS     = -MMD -MP -MT $(BUILDDIR)/$(*F).o -MF $(BUILDDIR)/$(*D)/$(*F).d
+CFLAGS   = $(DEBUG) -lm $(OPTIMIZE) $(DEPS) -mmcu=$(MCU) -DF_CPU=$(F_CPU)
+LDFLAGS  = $(DEBUG) -mmcu=$(MCU) -Wl,-gc-sections -mrelax
 
-AVRDUDE = avrdude
-AD_MCU = -p atmega8
+# AVR toolchain and flasher
+CC       = avr-gcc
+OBJCOPY  = avr-objcopy
+OBJDUMP  = avr-objdump
+
+# AVRDude parameters
+AVRDUDE  = avrdude
+AD_MCU   = -p $(MCU)
 #AD_PROG = -c stk500v2
 #AD_PORT = -P avrdoper
 
-AD_CMDLINE = $(AD_MCU) $(AD_PROG) $(AD_PORT)
+AD_CMD   = $(AD_MCU) $(AD_PROG) $(AD_PORT) -V
 
-OBJS = $(SRCS:.c=.o)
+# Build objects
+OBJS     = $(addprefix $(BUILDDIR)/, $(SRCS:.c=.o))
+ELF      = $(BUILDDIR)/$(TARG).elf
 
-all: $(TARG)
+all: $(ELF) size
 
-$(TARG): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@.elf  $(OBJS) -lm
-	$(OBJCOPY) -O ihex -R .eeprom -R .nwram  $@.elf $@.hex
-	./size.sh $@.elf
+# Dependencies
+-include $(OBJS:.o=.d)
 
-%.o: %.c
+$(ELF): $(OBJS)
+	@mkdir -p $(BUILDDIR) flash
+	$(CC) $(LDFLAGS) -o $(ELF) $(OBJS) -lm
+	$(OBJCOPY) -O ihex -R .eeprom -R .nwram $(ELF) flash/$(TARG).hex
+	$(OBJDUMP) -h -S $(ELF) > $(BUILDDIR)/$(TARG).lss
+
+size:
+	@sh ./size.sh $(ELF)
+
+$(BUILDDIR)/%.o: %.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+.PHONY: clean
 clean:
-	rm -f $(TARG).elf $(TARG).bin $(TARG).hex $(OBJS) *.map
+	rm -rf $(BUILDDIR)
 
-flash: $(TARG)
-	$(AVRDUDE) $(AD_CMDLINE) -V -B 1.1 -U flash:w:$(TARG).hex:i
+.PHONY: flash
+flash: $(ELF)
+	$(AVRDUDE) $(AD_CMD) -U flash:w:flash/$(TARG).hex:i
 
+.PHONY: fuse
 fuse:
-	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xFF:m -U hfuse:w:0xC1:m
+	$(AVRDUDE) $(AD_CMD) %FUSEBIT_STRING%
